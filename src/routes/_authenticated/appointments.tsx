@@ -43,7 +43,10 @@ function Appointments() {
       .update({ status: "cancelled" })
       .eq("id", id);
     setBusy(null);
-    if (error) return toast.error("Não foi possível cancelar.");
+    if (error) {
+      toast.error("Não foi possível cancelar.");
+      return;
+    }
     toast.success("Agendamento cancelado. O reembolso do sinal foi solicitado.");
     queryClient.invalidateQueries({ queryKey: ["appointments"] });
   }
@@ -55,7 +58,10 @@ function Appointments() {
       .update({ paid_cents: total, status: "paid" })
       .eq("id", id);
     setBusy(null);
-    if (error) return toast.error("Não foi possível concluir o pagamento.");
+    if (error) {
+      toast.error("Não foi possível concluir o pagamento.");
+      return;
+    }
     toast.success("Pagamento concluído. Obrigada!");
     queryClient.invalidateQueries({ queryKey: ["appointments"] });
   }

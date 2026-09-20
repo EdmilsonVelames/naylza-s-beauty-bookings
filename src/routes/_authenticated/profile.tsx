@@ -57,7 +57,10 @@ function Profile() {
       .from("profiles")
       .upsert({ id: userData.user.id, full_name: fullName, phone, email });
     setSaving(false);
-    if (error) return toast.error("Não foi possível salvar.");
+    if (error) {
+      toast.error("Não foi possível salvar.");
+      return;
+    }
     toast.success("Dados atualizados.");
     queryClient.invalidateQueries({ queryKey: ["profile"] });
   }

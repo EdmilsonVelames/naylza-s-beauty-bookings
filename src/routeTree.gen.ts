@@ -17,6 +17,8 @@ import { Route as AuthenticatedCheckoutRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedConfirmationRouteImport } from './routes/_authenticated/confirmation'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
+import { Route as AuthenticatedAdminScheduleRouteImport } from './routes/_authenticated/admin.schedule'
+import { Route as AuthenticatedAdminServicesRouteImport } from './routes/_authenticated/admin.services'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -59,6 +61,18 @@ const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminScheduleRoute =
+  AuthenticatedAdminScheduleRouteImport.update({
+    id: '/admin/schedule',
+    path: '/admin/schedule',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminServicesRoute =
+  AuthenticatedAdminServicesRouteImport.update({
+    id: '/admin/services',
+    path: '/admin/services',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -68,6 +82,8 @@ export interface FileRoutesByFullPath {
   '/confirmation': typeof AuthenticatedConfirmationRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/admin/schedule': typeof AuthenticatedAdminScheduleRoute
+  '/admin/services': typeof AuthenticatedAdminServicesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -77,6 +93,8 @@ export interface FileRoutesByTo {
   '/confirmation': typeof AuthenticatedConfirmationRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/admin/schedule': typeof AuthenticatedAdminScheduleRoute
+  '/admin/services': typeof AuthenticatedAdminServicesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -88,6 +106,8 @@ export interface FileRoutesById {
   '/_authenticated/confirmation': typeof AuthenticatedConfirmationRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
+  '/_authenticated/admin/schedule': typeof AuthenticatedAdminScheduleRoute
+  '/_authenticated/admin/services': typeof AuthenticatedAdminServicesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -99,6 +119,8 @@ export interface FileRouteTypes {
     | '/confirmation'
     | '/dashboard'
     | '/profile'
+    | '/admin/schedule'
+    | '/admin/services'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -108,6 +130,8 @@ export interface FileRouteTypes {
     | '/confirmation'
     | '/dashboard'
     | '/profile'
+    | '/admin/schedule'
+    | '/admin/services'
   id:
     | '__root__'
     | '/'
@@ -118,6 +142,8 @@ export interface FileRouteTypes {
     | '/_authenticated/confirmation'
     | '/_authenticated/dashboard'
     | '/_authenticated/profile'
+    | '/_authenticated/admin/schedule'
+    | '/_authenticated/admin/services'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -183,6 +209,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProfileRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/schedule': {
+      id: '/_authenticated/admin/schedule'
+      path: '/admin/schedule'
+      fullPath: '/admin/schedule'
+      preLoaderRoute: typeof AuthenticatedAdminScheduleRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/services': {
+      id: '/_authenticated/admin/services'
+      path: '/admin/services'
+      fullPath: '/admin/services'
+      preLoaderRoute: typeof AuthenticatedAdminServicesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -193,6 +233,8 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedConfirmationRoute: typeof AuthenticatedConfirmationRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
+  AuthenticatedAdminScheduleRoute: typeof AuthenticatedAdminScheduleRoute
+  AuthenticatedAdminServicesRoute: typeof AuthenticatedAdminServicesRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -202,6 +244,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedConfirmationRoute: AuthenticatedConfirmationRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
+  AuthenticatedAdminScheduleRoute: AuthenticatedAdminScheduleRoute,
+  AuthenticatedAdminServicesRoute: AuthenticatedAdminServicesRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

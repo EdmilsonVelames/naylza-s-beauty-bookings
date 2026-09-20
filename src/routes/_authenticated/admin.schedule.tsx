@@ -56,7 +56,7 @@ function AdminSchedule() {
       const [appts, blocks] = await Promise.all([
         supabase
           .from("appointments")
-          .select("*, services(name), profiles(full_name)")
+          .select("*, services(name)")
           .eq("professional_id", activeProfessional)
           .neq("status", "cancelled")
           .gte("starts_at", start)
@@ -203,7 +203,7 @@ function AdminSchedule() {
                 <div className="min-w-0 flex-1">
                   <p className="font-medium">{a.services?.name}</p>
                   <p className="text-sm text-muted-foreground">
-                    {a.profiles?.full_name || "Cliente"}
+                    Cliente
                   </p>
                 </div>
                 <span className="text-sm text-muted-foreground">
