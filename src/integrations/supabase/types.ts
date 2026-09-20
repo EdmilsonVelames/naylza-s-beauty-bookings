@@ -14,16 +14,197 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      appointments: {
+        Row: {
+          created_at: string
+          id: string
+          paid_cents: number
+          payment_method: string
+          professional_id: string
+          service_id: string
+          starts_at: string
+          status: string
+          total_cents: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          paid_cents?: number
+          payment_method?: string
+          professional_id: string
+          service_id: string
+          starts_at: string
+          status?: string
+          total_cents?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          paid_cents?: number
+          payment_method?: string
+          professional_id?: string
+          service_id?: string
+          starts_at?: string
+          status?: string
+          total_cents?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointments_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "professionals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      blocked_slots: {
+        Row: {
+          id: string
+          professional_id: string
+          reason: string
+          starts_at: string
+        }
+        Insert: {
+          id?: string
+          professional_id: string
+          reason?: string
+          starts_at: string
+        }
+        Update: {
+          id?: string
+          professional_id?: string
+          reason?: string
+          starts_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blocked_slots_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "professionals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      professionals: {
+        Row: {
+          active: boolean
+          id: string
+          name: string
+          specialty: string
+        }
+        Insert: {
+          active?: boolean
+          id?: string
+          name: string
+          specialty?: string
+        }
+        Update: {
+          active?: boolean
+          id?: string
+          name?: string
+          specialty?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          phone: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string
+          full_name?: string
+          id: string
+          phone?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          phone?: string
+        }
+        Relationships: []
+      }
+      services: {
+        Row: {
+          active: boolean
+          created_at: string
+          description: string
+          duration_min: number
+          id: string
+          name: string
+          price_cents: number
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          description?: string
+          duration_min?: number
+          id?: string
+          name: string
+          price_cents?: number
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          description?: string
+          duration_min?: number
+          id?: string
+          name?: string
+          price_cents?: number
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "client"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +331,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "client"],
+    },
   },
 } as const
