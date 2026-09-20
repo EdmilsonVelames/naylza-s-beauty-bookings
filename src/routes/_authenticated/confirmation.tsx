@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { clearDraft, formatBRL, formatDateTime } from "@/lib/salon";
 
-type Search = { id?: string };
+type Search = { id?: string | undefined };
 
 export const Route = createFileRoute("/_authenticated/confirmation")({
   validateSearch: (search: Record<string, unknown>): Search => ({
