@@ -142,6 +142,48 @@ export type Database = {
         }
         Relationships: []
       }
+      rooms: {
+        Row: {
+          active: boolean
+          created_at: string
+          description: string
+          id: string
+          name: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          description?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          description?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      salon_settings: {
+        Row: {
+          deposit_percent: number
+          id: boolean
+          updated_at: string
+        }
+        Insert: {
+          deposit_percent?: number
+          id?: boolean
+          updated_at?: string
+        }
+        Update: {
+          deposit_percent?: number
+          id?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       services: {
         Row: {
           active: boolean

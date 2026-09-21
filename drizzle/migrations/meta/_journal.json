@@ -8,6 +8,13 @@
       "when": 1789938426361,
       "tag": "0000_salon_agenda_schema",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1789998207280,
+      "tag": "0001_rooms_and_salon_settings",
+      "breakpoints": true
     }
   ]
 }
