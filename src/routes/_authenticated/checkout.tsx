@@ -1,15 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { startDepositCheckout } from "@/lib/payments.functions";
 import { formatBRL, formatDateTime, readDraft, type BookingDraft } from "@/lib/salon";
 import { useSalonSettings, depositFor, DEFAULT_DEPOSIT_PERCENT } from "@/hooks/useSalonSettings";
 
