@@ -126,7 +126,7 @@ function Checkout() {
           </SelectContent>
         </Select>
         <Button className="w-full sm:w-auto" disabled={loading} onClick={pay}>
-          Pagar 50% ({formatBRL(deposit)})
+          Pagar {percent}% ({formatBRL(deposit)})
         </Button>
       </section>
     </div>
