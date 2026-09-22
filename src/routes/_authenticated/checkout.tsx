@@ -1,15 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { startDepositCheckout } from "@/lib/payments.functions";
 import { formatBRL, formatDateTime, readDraft, type BookingDraft } from "@/lib/salon";
 import { useSalonSettings, depositFor, DEFAULT_DEPOSIT_PERCENT } from "@/hooks/useSalonSettings";
 
@@ -25,16 +19,10 @@ export const Route = createFileRoute("/_authenticated/checkout")({
   component: Checkout,
 });
 
-const METHODS = [
-  { value: "pix", label: "Pix" },
-  { value: "credit", label: "Cartão de crédito" },
-  { value: "debit", label: "Cartão de débito" },
-];
-
 function Checkout() {
   const navigate = useNavigate();
+  const startDeposit = useServerFn(startDepositCheckout);
   const [draft, setDraft] = useState<BookingDraft | null>(null);
-  const [method, setMethod] = useState("pix");
   const [loading, setLoading] = useState(false);
   const { data: settings } = useSalonSettings();
   const percent = settings?.deposit_percent ?? DEFAULT_DEPOSIT_PERCENT;
@@ -55,31 +43,19 @@ function Checkout() {
   async function pay() {
     if (!draft) return;
     setLoading(true);
-    const { data: userData } = await supabase.auth.getUser();
-    if (!userData.user) {
+    try {
+      const res = await startDeposit({
+        data: {
+          serviceId: draft.serviceId,
+          professionalId: draft.professionalId,
+          startsAt: draft.startsAt,
+        },
+      });
+      window.location.href = res.url;
+    } catch {
       setLoading(false);
-      return;
+      toast.error("Não foi possível abrir o pagamento. Tente novamente.");
     }
-    const { data, error } = await supabase
-      .from("appointments")
-      .insert({
-        user_id: userData.user.id,
-        service_id: draft.serviceId,
-        professional_id: draft.professionalId,
-        starts_at: draft.startsAt,
-        total_cents: draft.priceCents,
-        paid_cents: deposit,
-        payment_method: method,
-        status: "confirmed",
-      })
-      .select("id")
-      .single();
-    setLoading(false);
-    if (error || !data) {
-      toast.error("Não foi possível confirmar o pagamento. Tente novamente.");
-      return;
-    }
-    navigate({ to: "/confirmation", search: { id: data.id } });
   }
 
   return (

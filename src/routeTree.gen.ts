@@ -20,6 +20,7 @@ import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedAdminSalonRouteImport } from './routes/_authenticated/admin.salon'
 import { Route as AuthenticatedAdminScheduleRouteImport } from './routes/_authenticated/admin.schedule'
 import { Route as AuthenticatedAdminServicesRouteImport } from './routes/_authenticated/admin.services'
+import { Route as ApiPublicMercadopagoWebhookRouteImport } from './routes/api/public/mercadopago.webhook'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -79,6 +80,12 @@ const AuthenticatedAdminServicesRoute =
     path: '/admin/services',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiPublicMercadopagoWebhookRoute =
+  ApiPublicMercadopagoWebhookRouteImport.update({
+    id: '/api/public/mercadopago/webhook',
+    path: '/api/public/mercadopago/webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -91,6 +98,7 @@ export interface FileRoutesByFullPath {
   '/admin/salon': typeof AuthenticatedAdminSalonRoute
   '/admin/schedule': typeof AuthenticatedAdminScheduleRoute
   '/admin/services': typeof AuthenticatedAdminServicesRoute
+  '/api/public/mercadopago/webhook': typeof ApiPublicMercadopagoWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -103,6 +111,7 @@ export interface FileRoutesByTo {
   '/admin/salon': typeof AuthenticatedAdminSalonRoute
   '/admin/schedule': typeof AuthenticatedAdminScheduleRoute
   '/admin/services': typeof AuthenticatedAdminServicesRoute
+  '/api/public/mercadopago/webhook': typeof ApiPublicMercadopagoWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -117,6 +126,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/salon': typeof AuthenticatedAdminSalonRoute
   '/_authenticated/admin/schedule': typeof AuthenticatedAdminScheduleRoute
   '/_authenticated/admin/services': typeof AuthenticatedAdminServicesRoute
+  '/api/public/mercadopago/webhook': typeof ApiPublicMercadopagoWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -131,6 +141,7 @@ export interface FileRouteTypes {
     | '/admin/salon'
     | '/admin/schedule'
     | '/admin/services'
+    | '/api/public/mercadopago/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -143,6 +154,7 @@ export interface FileRouteTypes {
     | '/admin/salon'
     | '/admin/schedule'
     | '/admin/services'
+    | '/api/public/mercadopago/webhook'
   id:
     | '__root__'
     | '/'
@@ -156,11 +168,13 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/salon'
     | '/_authenticated/admin/schedule'
     | '/_authenticated/admin/services'
+    | '/api/public/mercadopago/webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  ApiPublicMercadopagoWebhookRoute: typeof ApiPublicMercadopagoWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -242,6 +256,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminServicesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/mercadopago/webhook': {
+      id: '/api/public/mercadopago/webhook'
+      path: '/api/public/mercadopago/webhook'
+      fullPath: '/api/public/mercadopago/webhook'
+      preLoaderRoute: typeof ApiPublicMercadopagoWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -275,6 +296,7 @@ const AuthenticatedRouteRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  ApiPublicMercadopagoWebhookRoute: ApiPublicMercadopagoWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

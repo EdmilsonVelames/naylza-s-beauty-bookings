@@ -97,6 +97,59 @@ export type Database = {
           },
         ]
       }
+      payments: {
+        Row: {
+          amount_cents: number
+          appointment_id: string
+          created_at: string
+          id: string
+          kind: string
+          payment_method: string
+          preference_id: string | null
+          provider: string
+          provider_payment_id: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount_cents: number
+          appointment_id: string
+          created_at?: string
+          id?: string
+          kind?: string
+          payment_method?: string
+          preference_id?: string | null
+          provider?: string
+          provider_payment_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount_cents?: number
+          appointment_id?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          payment_method?: string
+          preference_id?: string | null
+          provider?: string
+          provider_payment_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       professionals: {
         Row: {
           active: boolean
