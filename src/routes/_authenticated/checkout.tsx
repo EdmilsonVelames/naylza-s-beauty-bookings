@@ -36,6 +36,8 @@ function Checkout() {
   const [draft, setDraft] = useState<BookingDraft | null>(null);
   const [method, setMethod] = useState("pix");
   const [loading, setLoading] = useState(false);
+  const { data: settings } = useSalonSettings();
+  const percent = settings?.deposit_percent ?? DEFAULT_DEPOSIT_PERCENT;
 
   useEffect(() => {
     const d = readDraft();
@@ -48,7 +50,7 @@ function Checkout() {
 
   if (!draft) return null;
 
-  const deposit = Math.round(draft.priceCents / 2);
+  const deposit = depositFor(draft.priceCents, percent);
 
   async function pay() {
     if (!draft) return;
@@ -85,7 +87,7 @@ function Checkout() {
       <div>
         <h1 className="font-display text-4xl">Pagamento antecipado</h1>
         <p className="mt-1 text-muted-foreground">
-          Confirme sua reserva pagando 50% agora. O restante é pago no dia do atendimento.
+          Confirme sua reserva pagando {percent}% agora. O restante é pago no dia do atendimento.
         </p>
       </div>
 
@@ -104,7 +106,7 @@ function Checkout() {
           <p className="mt-1 font-display text-3xl">{formatBRL(draft.priceCents)}</p>
         </div>
         <div className="surface-card bg-hero p-5 text-primary-foreground">
-          <p className="text-xs uppercase tracking-wide opacity-80">Antecipado (50%)</p>
+          <p className="text-xs uppercase tracking-wide opacity-80">Antecipado ({percent}%)</p>
           <p className="mt-1 font-display text-3xl">{formatBRL(deposit)}</p>
         </div>
       </div>
