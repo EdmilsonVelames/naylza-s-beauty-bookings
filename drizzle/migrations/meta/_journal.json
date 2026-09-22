@@ -15,6 +15,13 @@
       "when": 1789998207280,
       "tag": "0001_rooms_and_salon_settings",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790038956832,
+      "tag": "0002_payments_mercadopago",
+      "breakpoints": true
     }
   ]
 }
