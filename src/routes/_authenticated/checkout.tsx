@@ -43,31 +43,19 @@ function Checkout() {
   async function pay() {
     if (!draft) return;
     setLoading(true);
-    const { data: userData } = await supabase.auth.getUser();
-    if (!userData.user) {
+    try {
+      const res = await startDeposit({
+        data: {
+          serviceId: draft.serviceId,
+          professionalId: draft.professionalId,
+          startsAt: draft.startsAt,
+        },
+      });
+      window.location.href = res.url;
+    } catch {
       setLoading(false);
-      return;
+      toast.error("Não foi possível abrir o pagamento. Tente novamente.");
     }
-    const { data, error } = await supabase
-      .from("appointments")
-      .insert({
-        user_id: userData.user.id,
-        service_id: draft.serviceId,
-        professional_id: draft.professionalId,
-        starts_at: draft.startsAt,
-        total_cents: draft.priceCents,
-        paid_cents: deposit,
-        payment_method: method,
-        status: "confirmed",
-      })
-      .select("id")
-      .single();
-    setLoading(false);
-    if (error || !data) {
-      toast.error("Não foi possível confirmar o pagamento. Tente novamente.");
-      return;
-    }
-    navigate({ to: "/confirmation", search: { id: data.id } });
   }
 
   return (
