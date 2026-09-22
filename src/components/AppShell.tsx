@@ -72,6 +72,13 @@ export function AppShell({ children }: { children: ReactNode }) {
                   Agenda do salão
                 </Link>
                 <Link
+                  to="/admin/salon"
+                  activeProps={{ className: "bg-secondary text-secondary-foreground" }}
+                  className="rounded-full px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-secondary/70"
+                >
+                  Administração
+                </Link>
+                <Link
                   to="/admin/services"
                   activeProps={{ className: "bg-secondary text-secondary-foreground" }}
                   className="rounded-full px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-secondary/70"

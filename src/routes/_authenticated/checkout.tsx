@@ -11,6 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { formatBRL, formatDateTime, readDraft, type BookingDraft } from "@/lib/salon";
+import { useSalonSettings, depositFor, DEFAULT_DEPOSIT_PERCENT } from "@/hooks/useSalonSettings";
 
 export const Route = createFileRoute("/_authenticated/checkout")({
   head: () => ({
