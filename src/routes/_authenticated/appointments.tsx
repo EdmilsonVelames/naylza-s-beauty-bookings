@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { startBalanceCheckout } from "@/lib/payments.functions";
 import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -33,6 +35,7 @@ function Appointments() {
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState("all");
   const [busy, setBusy] = useState<string | null>(null);
+  const startBalance = useServerFn(startBalanceCheckout);
 
   const list = (data ?? []).filter((a) => filter === "all" || a.status === filter);
 
