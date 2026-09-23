@@ -33,6 +33,8 @@ function Confirmation() {
   const { data } = useQuery({
     queryKey: ["appointment", id],
     enabled: Boolean(id),
+    refetchInterval: (query) =>
+      (query.state.data as { paid_cents?: number } | undefined)?.paid_cents ? false : 4000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("appointments")
@@ -44,15 +46,22 @@ function Confirmation() {
     },
   });
 
+  const awaiting = !data || data.paid_cents === 0;
+
   return (
     <div className="mx-auto max-w-lg text-center">
       <div className="mx-auto flex size-20 items-center justify-center rounded-full bg-success/15 text-success">
         <CheckCircle2 className="size-10" />
       </div>
-      <h1 className="mt-6 font-display text-4xl">Agendamento confirmado!</h1>
+      <h1 className="mt-6 font-display text-4xl">
+        {awaiting ? "Quase lá!" : "Agendamento confirmado!"}
+      </h1>
       <p className="mt-2 text-muted-foreground">
-        Recebemos seu pagamento antecipado. Te esperamos no salão.
+        {awaiting
+          ? "Assim que o Mercado Pago confirmar o pagamento, sua reserva fica confirmada. Esta página atualiza sozinha."
+          : "Recebemos seu pagamento antecipado. Te esperamos no salão."}
       </p>
+
 
       {data ? (
         <div className="surface-card mt-8 space-y-3 p-6 text-left">
