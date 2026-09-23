@@ -89,20 +89,12 @@ function Checkout() {
 
       <section className="surface-card space-y-3 p-6">
         <h2 className="font-display text-2xl">Método de pagamento</h2>
-        <Select value={method} onValueChange={setMethod}>
-          <SelectTrigger className="w-full sm:w-72">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {METHODS.map((m) => (
-              <SelectItem key={m.value} value={m.value}>
-                {m.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <p className="text-sm text-muted-foreground">
+          O pagamento é feito pelo Mercado Pago, com Pix, cartão de crédito ou débito. Você será
+          levada para uma página segura e volta para a confirmação em seguida.
+        </p>
         <Button className="w-full sm:w-auto" disabled={loading} onClick={pay}>
-          Pagar {percent}% ({formatBRL(deposit)})
+          {loading ? "Abrindo pagamento…" : `Pagar ${percent}% (${formatBRL(deposit)})`}
         </Button>
       </section>
     </div>
