@@ -2,11 +2,16 @@ import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeader } from "@tanstack/react-start/server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+// Mercado Pago só aceita URLs públicas para retorno e notificação.
+const PUBLIC_FALLBACK = "https://project--179389ca-e05c-5a09-bd1e-70fb9ba62a44-dev.lovable.app";
+
 function resolveOrigin() {
-  const origin = getRequestHeader("origin");
-  if (origin) return origin.replace(/\/$/, "");
-  const host = getRequestHeader("host");
-  return host ? `https://${host}` : "";
+  const origin = getRequestHeader("origin") ?? "";
+  const host = getRequestHeader("host") ?? "";
+  const candidate = origin || (host ? `https://${host}` : "");
+  const clean = candidate.replace(/\/$/, "");
+  if (!clean || /localhost|127\.0\.0\.1|^http:\/\//.test(clean)) return PUBLIC_FALLBACK;
+  return clean;
 }
 
 type StartInput = { serviceId: string; professionalId: string; startsAt: string };
