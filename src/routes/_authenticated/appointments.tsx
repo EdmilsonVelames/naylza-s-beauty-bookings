@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { startBalanceCheckout } from "@/lib/payments.functions";
 import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -33,6 +35,7 @@ function Appointments() {
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState("all");
   const [busy, setBusy] = useState<string | null>(null);
+  const startBalance = useServerFn(startBalanceCheckout);
 
   const list = (data ?? []).filter((a) => filter === "all" || a.status === filter);
 
@@ -51,19 +54,15 @@ function Appointments() {
     queryClient.invalidateQueries({ queryKey: ["appointments"] });
   }
 
-  async function payRest(id: string, total: number) {
+  async function payRest(id: string) {
     setBusy(id);
-    const { error } = await supabase
-      .from("appointments")
-      .update({ paid_cents: total, status: "paid" })
-      .eq("id", id);
-    setBusy(null);
-    if (error) {
-      toast.error("Não foi possível concluir o pagamento.");
-      return;
+    try {
+      const res = await startBalance({ data: { appointmentId: id } });
+      window.location.href = res.url;
+    } catch {
+      setBusy(null);
+      toast.error("Não foi possível abrir o pagamento. Tente novamente.");
     }
-    toast.success("Pagamento concluído. Obrigada!");
-    queryClient.invalidateQueries({ queryKey: ["appointments"] });
   }
 
   return (
@@ -124,7 +123,7 @@ function Appointments() {
                       <Button
                         size="sm"
                         disabled={busy === a.id}
-                        onClick={() => payRest(a.id, a.total_cents)}
+                        onClick={() => payRest(a.id)}
                       >
                         Pagar saldo restante ({formatBRL(remaining)})
                       </Button>
