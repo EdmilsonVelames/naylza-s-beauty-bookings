@@ -51,19 +51,15 @@ function Appointments() {
     queryClient.invalidateQueries({ queryKey: ["appointments"] });
   }
 
-  async function payRest(id: string, total: number) {
+  async function payRest(id: string) {
     setBusy(id);
-    const { error } = await supabase
-      .from("appointments")
-      .update({ paid_cents: total, status: "paid" })
-      .eq("id", id);
-    setBusy(null);
-    if (error) {
-      toast.error("Não foi possível concluir o pagamento.");
-      return;
+    try {
+      const res = await startBalance({ data: { appointmentId: id } });
+      window.location.href = res.url;
+    } catch {
+      setBusy(null);
+      toast.error("Não foi possível abrir o pagamento. Tente novamente.");
     }
-    toast.success("Pagamento concluído. Obrigada!");
-    queryClient.invalidateQueries({ queryKey: ["appointments"] });
   }
 
   return (
