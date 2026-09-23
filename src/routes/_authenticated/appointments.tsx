@@ -123,7 +123,7 @@ function Appointments() {
                       <Button
                         size="sm"
                         disabled={busy === a.id}
-                        onClick={() => payRest(a.id, a.total_cents)}
+                        onClick={() => payRest(a.id)}
                       >
                         Pagar saldo restante ({formatBRL(remaining)})
                       </Button>
