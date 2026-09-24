@@ -285,6 +285,142 @@ function Rooms() {
   );
 }
 
+function Hours() {
+  const queryClient = useQueryClient();
+  const { data: settings } = useSalonSettings();
+  const [form, setForm] = useState({
+    open_time: "09:00",
+    close_time: "19:00",
+    slot_minutes: "30",
+    break_start: "12:00",
+    break_end: "13:00",
+  });
+
+  useEffect(() => {
+    if (!settings) return;
+    setForm({
+      open_time: settings.open_time,
+      close_time: settings.close_time,
+      slot_minutes: String(settings.slot_minutes),
+      break_start: settings.break_start,
+      break_end: settings.break_end,
+    });
+  }, [settings]);
+
+  const preview = buildSlots({
+    open_time: form.open_time || "09:00",
+    close_time: form.close_time || "19:00",
+    slot_minutes: Number(form.slot_minutes) || 30,
+    break_start: form.break_start,
+    break_end: form.break_end,
+  });
+
+  async function save() {
+    const step = Number(form.slot_minutes);
+    if (!Number.isFinite(step) || step < 5 || step > 240) {
+      toast.error("O intervalo entre horários deve ficar entre 5 e 240 minutos.");
+      return;
+    }
+    if (minutesOf(form.close_time) <= minutesOf(form.open_time)) {
+      toast.error("O horário de fechamento precisa ser depois da abertura.");
+      return;
+    }
+    const { error } = await supabase
+      .from("salon_settings")
+      .update({
+        open_time: form.open_time,
+        close_time: form.close_time,
+        slot_minutes: Math.round(step),
+        break_start: form.break_start,
+        break_end: form.break_end,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", true);
+    if (error) {
+      toast.error("Não foi possível salvar os horários.");
+      return;
+    }
+    toast.success("Horários de atendimento atualizados.");
+    queryClient.invalidateQueries({ queryKey: ["salon-settings"] });
+    queryClient.invalidateQueries({ queryKey: ["slots"] });
+  }
+
+  return (
+    <div className="space-y-4">
+      <section className="surface-card space-y-4 p-5">
+        <div>
+          <h2 className="font-display text-2xl">Horários de atendimento</h2>
+          <p className="text-sm text-muted-foreground">
+            Define quais horários aparecem para as clientes agendarem.
+          </p>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-3">
+          <div className="space-y-1.5">
+            <Label htmlFor="open">Abre às</Label>
+            <Input
+              id="open"
+              type="time"
+              value={form.open_time}
+              onChange={(e) => setForm({ ...form, open_time: e.target.value })}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="close">Fecha às</Label>
+            <Input
+              id="close"
+              type="time"
+              value={form.close_time}
+              onChange={(e) => setForm({ ...form, close_time: e.target.value })}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="step">Intervalo (min)</Label>
+            <Input
+              id="step"
+              value={form.slot_minutes}
+              onChange={(e) => setForm({ ...form, slot_minutes: e.target.value })}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="bs">Pausa começa</Label>
+            <Input
+              id="bs"
+              type="time"
+              value={form.break_start}
+              onChange={(e) => setForm({ ...form, break_start: e.target.value })}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="be">Pausa termina</Label>
+            <Input
+              id="be"
+              type="time"
+              value={form.break_end}
+              onChange={(e) => setForm({ ...form, break_end: e.target.value })}
+            />
+          </div>
+        </div>
+        <Button onClick={save}>Salvar horários</Button>
+      </section>
+
+      <section className="surface-card space-y-3 p-5">
+        <h3 className="font-display text-xl">Como vai aparecer ({preview.length} horários)</h3>
+        <div className="flex flex-wrap gap-2">
+          {preview.map((h) => (
+            <span key={h} className="rounded-lg border border-border bg-card px-3 py-1.5 text-sm">
+              {h}
+            </span>
+          ))}
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Cada serviço ocupa o tempo da sua duração, então horários que não cabem ficam
+          indisponíveis automaticamente.
+        </p>
+      </section>
+    </div>
+  );
+}
+
 function Values() {
   const queryClient = useQueryClient();
   const { data: settings } = useSalonSettings();
