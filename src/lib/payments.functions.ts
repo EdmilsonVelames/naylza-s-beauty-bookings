@@ -59,6 +59,16 @@ export const startDepositCheckout = createServerFn({ method: "POST" })
     const percent = settings?.deposit_percent ?? 50;
     const deposit = Math.round((service.price_cents * percent) / 100);
 
+    // Libera reservas pendentes que expiraram nesse mesmo horário.
+    const { supabaseAdmin: admin } = await import("@/integrations/supabase/client.server");
+    await admin
+      .from("appointments")
+      .update({ status: "cancelled" })
+      .eq("professional_id", data.professionalId)
+      .eq("starts_at", data.startsAt)
+      .eq("status", "pending")
+      .lt("created_at", new Date(now - 20 * 60_000).toISOString());
+
     const { data: appointment, error: apptError } = await supabase
       .from("appointments")
       .insert({
