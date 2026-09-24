@@ -221,18 +221,33 @@ export type Database = {
       }
       salon_settings: {
         Row: {
+          break_end: string
+          break_start: string
+          close_time: string
           deposit_percent: number
           id: boolean
+          open_time: string
+          slot_minutes: number
           updated_at: string
         }
         Insert: {
+          break_end?: string
+          break_start?: string
+          close_time?: string
           deposit_percent?: number
           id?: boolean
+          open_time?: string
+          slot_minutes?: number
           updated_at?: string
         }
         Update: {
+          break_end?: string
+          break_start?: string
+          close_time?: string
           deposit_percent?: number
           id?: boolean
+          open_time?: string
+          slot_minutes?: number
           updated_at?: string
         }
         Relationships: []

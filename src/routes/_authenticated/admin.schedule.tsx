@@ -6,7 +6,8 @@ import { Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useIsAdmin } from "@/components/AppShell";
-import { OPENING_HOURS, formatBRL, formatDayLabel, sameDayRange, toIsoSlot } from "@/lib/salon";
+import { buildSlots, formatBRL, formatDayLabel, sameDayRange, toIsoSlot } from "@/lib/salon";
+import { useSalonSettings, DEFAULT_HOURS } from "@/hooks/useSalonSettings";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/admin/schedule")({
@@ -35,6 +36,14 @@ function AdminSchedule() {
     [],
   );
   const [day, setDay] = useState(days[0]!);
+  const { data: hoursSettings } = useSalonSettings();
+  const slots = buildSlots({
+    open_time: hoursSettings?.open_time ?? DEFAULT_HOURS.open_time,
+    close_time: hoursSettings?.close_time ?? DEFAULT_HOURS.close_time,
+    slot_minutes: hoursSettings?.slot_minutes ?? DEFAULT_HOURS.slot_minutes,
+    break_start: hoursSettings?.break_start ?? DEFAULT_HOURS.break_start,
+    break_end: hoursSettings?.break_end ?? DEFAULT_HOURS.break_end,
+  });
   const [professionalId, setProfessionalId] = useState<string>("");
 
   const { data: professionals } = useQuery({
@@ -153,7 +162,7 @@ function AdminSchedule() {
       <section className="space-y-3">
         <h2 className="font-display text-2xl">Horários</h2>
         <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
-          {OPENING_HOURS.map((h) => {
+          {slots.map((h) => {
             const ts = new Date(toIsoSlot(day, h)).getTime();
             const booked = dayData?.appointments.some(
               (a) => new Date(a.starts_at).getTime() === ts,

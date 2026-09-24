@@ -52,9 +52,14 @@ function Checkout() {
         },
       });
       window.location.href = res.url;
-    } catch {
+    } catch (e) {
       setLoading(false);
-      toast.error("Não foi possível abrir o pagamento. Tente novamente.");
+      const msg = e instanceof Error ? e.message : "";
+      toast.error(
+        msg.includes("reservado")
+          ? "Este horário acabou de ser reservado. Escolha outro."
+          : "Não foi possível abrir o pagamento. Tente novamente.",
+      );
     }
   }
 

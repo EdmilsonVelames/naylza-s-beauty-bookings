@@ -25,10 +25,32 @@ export const startDepositCheckout = createServerFn({ method: "POST" })
 
     const { data: service, error: serviceError } = await supabase
       .from("services")
-      .select("id, name, price_cents")
+      .select("id, name, price_cents, duration_min")
       .eq("id", data.serviceId)
       .single();
     if (serviceError || !service) throw new Error("Serviço não encontrado");
+
+    // Confere se o horário ainda está livre, considerando a duração dos serviços.
+    const startMs = new Date(data.startsAt).getTime();
+    const endMs = startMs + service.duration_min * 60_000;
+    const windowStart = new Date(startMs - 8 * 60 * 60_000).toISOString();
+    const windowEnd = new Date(endMs + 60_000).toISOString();
+    const { data: sameDay } = await supabase
+      .from("appointments")
+      .select("starts_at, status, created_at, services(duration_min)")
+      .eq("professional_id", data.professionalId)
+      .neq("status", "cancelled")
+      .gte("starts_at", windowStart)
+      .lte("starts_at", windowEnd);
+    const now = Date.now();
+    const conflict = (sameDay ?? []).some((a) => {
+      if (a.status === "pending" && now - new Date(a.created_at).getTime() >= 20 * 60_000)
+        return false;
+      const s = new Date(a.starts_at).getTime();
+      const e = s + (a.services?.duration_min ?? 30) * 60_000;
+      return startMs < e && endMs > s;
+    });
+    if (conflict) throw new Error("Este horário acabou de ser reservado. Escolha outro.");
 
     const { data: settings } = await supabase
       .from("salon_settings")
@@ -36,6 +58,16 @@ export const startDepositCheckout = createServerFn({ method: "POST" })
       .maybeSingle();
     const percent = settings?.deposit_percent ?? 50;
     const deposit = Math.round((service.price_cents * percent) / 100);
+
+    // Libera reservas pendentes que expiraram nesse mesmo horário.
+    const { supabaseAdmin: admin } = await import("@/integrations/supabase/client.server");
+    await admin
+      .from("appointments")
+      .update({ status: "cancelled" })
+      .eq("professional_id", data.professionalId)
+      .eq("starts_at", data.startsAt)
+      .eq("status", "pending")
+      .lt("created_at", new Date(now - 20 * 60_000).toISOString());
 
     const { data: appointment, error: apptError } = await supabase
       .from("appointments")
