@@ -59,6 +59,7 @@ function AdminSalon() {
         <TabsList>
           <TabsTrigger value="pros">Profissionais</TabsTrigger>
           <TabsTrigger value="rooms">Salas</TabsTrigger>
+          <TabsTrigger value="hours">Horários</TabsTrigger>
           <TabsTrigger value="values">Valores</TabsTrigger>
         </TabsList>
         <TabsContent value="pros" className="mt-6">
@@ -66,6 +67,9 @@ function AdminSalon() {
         </TabsContent>
         <TabsContent value="rooms" className="mt-6">
           <Rooms />
+        </TabsContent>
+        <TabsContent value="hours" className="mt-6">
+          <Hours />
         </TabsContent>
         <TabsContent value="values" className="mt-6">
           <Values />
