@@ -125,6 +125,19 @@ function Booking() {
     },
   });
 
+  const slots = useMemo(
+    () =>
+      buildSlots({
+        open_time: hours?.open_time ?? "09:00",
+        close_time: hours?.close_time ?? "19:00",
+        slot_minutes: slotMinutes,
+        break_start: hours?.break_start ?? "",
+        break_end: hours?.break_end ?? "",
+      }),
+    [hours, slotMinutes],
+  );
+  const closeMinutes = minutesOf(hours?.close_time ?? "19:00");
+
   const service = services?.find((s) => s.id === serviceId);
   const professional = professionals?.find((p) => p.id === professionalId);
   const ready = Boolean(service && professional && time);
