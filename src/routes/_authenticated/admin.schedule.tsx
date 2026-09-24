@@ -6,7 +6,8 @@ import { Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useIsAdmin } from "@/components/AppShell";
-import { OPENING_HOURS, formatBRL, formatDayLabel, sameDayRange, toIsoSlot } from "@/lib/salon";
+import { buildSlots, formatBRL, formatDayLabel, sameDayRange, toIsoSlot } from "@/lib/salon";
+import { useSalonSettings, DEFAULT_HOURS } from "@/hooks/useSalonSettings";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/admin/schedule")({
