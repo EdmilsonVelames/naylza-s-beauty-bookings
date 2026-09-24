@@ -11,7 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useIsAdmin } from "@/components/AppShell";
 import { useSalonSettings, depositFor } from "@/hooks/useSalonSettings";
-import { formatBRL } from "@/lib/salon";
+import { buildSlots, formatBRL, minutesOf } from "@/lib/salon";
 
 export const Route = createFileRoute("/_authenticated/admin/salon")({
   head: () => ({
