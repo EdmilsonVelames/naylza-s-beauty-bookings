@@ -12,13 +12,18 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  OPENING_HOURS,
+  PENDING_HOLD_MIN,
+  buildSlots,
   formatBRL,
   formatDayLabel,
+  minutesOf,
+  overlaps,
   sameDayRange,
   saveDraft,
   toIsoSlot,
+  type Busy,
 } from "@/lib/salon";
+import { useSalonSettings } from "@/hooks/useSalonSettings";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/booking")({
