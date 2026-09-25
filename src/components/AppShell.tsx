@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarDays, Home, Scissors, Sparkles, User2, Settings } from "lucide-react";
+import { CalendarDays, Home, Scissors, Sparkles, User2, Settings, Wallet } from "lucide-react";
 import type { ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { SALON_NAME } from "@/lib/salon";
