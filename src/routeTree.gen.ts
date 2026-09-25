@@ -17,6 +17,7 @@ import { Route as AuthenticatedCheckoutRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedConfirmationRouteImport } from './routes/_authenticated/confirmation'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
+import { Route as AuthenticatedAdminCaixaRouteImport } from './routes/_authenticated/admin.caixa'
 import { Route as AuthenticatedAdminSalonRouteImport } from './routes/_authenticated/admin.salon'
 import { Route as AuthenticatedAdminScheduleRouteImport } from './routes/_authenticated/admin.schedule'
 import { Route as AuthenticatedAdminServicesRouteImport } from './routes/_authenticated/admin.services'
@@ -63,6 +64,11 @@ const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminCaixaRoute = AuthenticatedAdminCaixaRouteImport.update({
+  id: '/admin/caixa',
+  path: '/admin/caixa',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedAdminSalonRoute = AuthenticatedAdminSalonRouteImport.update({
   id: '/admin/salon',
   path: '/admin/salon',
@@ -95,6 +101,7 @@ export interface FileRoutesByFullPath {
   '/confirmation': typeof AuthenticatedConfirmationRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/admin/caixa': typeof AuthenticatedAdminCaixaRoute
   '/admin/salon': typeof AuthenticatedAdminSalonRoute
   '/admin/schedule': typeof AuthenticatedAdminScheduleRoute
   '/admin/services': typeof AuthenticatedAdminServicesRoute
@@ -108,6 +115,7 @@ export interface FileRoutesByTo {
   '/confirmation': typeof AuthenticatedConfirmationRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/admin/caixa': typeof AuthenticatedAdminCaixaRoute
   '/admin/salon': typeof AuthenticatedAdminSalonRoute
   '/admin/schedule': typeof AuthenticatedAdminScheduleRoute
   '/admin/services': typeof AuthenticatedAdminServicesRoute
@@ -123,6 +131,7 @@ export interface FileRoutesById {
   '/_authenticated/confirmation': typeof AuthenticatedConfirmationRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
+  '/_authenticated/admin/caixa': typeof AuthenticatedAdminCaixaRoute
   '/_authenticated/admin/salon': typeof AuthenticatedAdminSalonRoute
   '/_authenticated/admin/schedule': typeof AuthenticatedAdminScheduleRoute
   '/_authenticated/admin/services': typeof AuthenticatedAdminServicesRoute
@@ -138,6 +147,7 @@ export interface FileRouteTypes {
     | '/confirmation'
     | '/dashboard'
     | '/profile'
+    | '/admin/caixa'
     | '/admin/salon'
     | '/admin/schedule'
     | '/admin/services'
@@ -151,6 +161,7 @@ export interface FileRouteTypes {
     | '/confirmation'
     | '/dashboard'
     | '/profile'
+    | '/admin/caixa'
     | '/admin/salon'
     | '/admin/schedule'
     | '/admin/services'
@@ -165,6 +176,7 @@ export interface FileRouteTypes {
     | '/_authenticated/confirmation'
     | '/_authenticated/dashboard'
     | '/_authenticated/profile'
+    | '/_authenticated/admin/caixa'
     | '/_authenticated/admin/salon'
     | '/_authenticated/admin/schedule'
     | '/_authenticated/admin/services'
@@ -235,6 +247,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProfileRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/caixa': {
+      id: '/_authenticated/admin/caixa'
+      path: '/admin/caixa'
+      fullPath: '/admin/caixa'
+      preLoaderRoute: typeof AuthenticatedAdminCaixaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/salon': {
       id: '/_authenticated/admin/salon'
       path: '/admin/salon'
@@ -273,6 +292,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedConfirmationRoute: typeof AuthenticatedConfirmationRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
+  AuthenticatedAdminCaixaRoute: typeof AuthenticatedAdminCaixaRoute
   AuthenticatedAdminSalonRoute: typeof AuthenticatedAdminSalonRoute
   AuthenticatedAdminScheduleRoute: typeof AuthenticatedAdminScheduleRoute
   AuthenticatedAdminServicesRoute: typeof AuthenticatedAdminServicesRoute
@@ -285,6 +305,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedConfirmationRoute: AuthenticatedConfirmationRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
+  AuthenticatedAdminCaixaRoute: AuthenticatedAdminCaixaRoute,
   AuthenticatedAdminSalonRoute: AuthenticatedAdminSalonRoute,
   AuthenticatedAdminScheduleRoute: AuthenticatedAdminScheduleRoute,
   AuthenticatedAdminServicesRoute: AuthenticatedAdminServicesRoute,
