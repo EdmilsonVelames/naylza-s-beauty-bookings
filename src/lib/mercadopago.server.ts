@@ -33,6 +33,7 @@ export async function createPreference(input: PreferenceInput) {
       ],
       ...(input.payerEmail ? { payer: { email: input.payerEmail } } : {}),
       external_reference: input.externalReference,
+      payment_methods: { excluded_payment_types: [{ id: "ticket" }] },
       back_urls: {
         success: input.backUrl,
         pending: input.backUrl,
