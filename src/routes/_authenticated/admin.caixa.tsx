@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -44,6 +45,10 @@ const METHOD_LABEL: Record<string, string> = {
   amex: "Cartão Amex",
   mp_card: "Cartão Mercado Pago",
   mercadopago: "Mercado Pago",
+  dinheiro: "Dinheiro (no salão)",
+  maquininha_credito: "Maquininha — crédito",
+  maquininha_debito: "Maquininha — débito",
+  pix_salao: "Pix (no salão)",
 };
 
 type Row = { key: string; label: string; count: number; cents: number };
@@ -166,6 +171,8 @@ function Caixa() {
         <Button variant="outline" size="sm" onClick={() => preset(90)}>90 dias</Button>
       </div>
 
+      <ManualPayment />
+
       {!report ? (
         <p className="text-sm text-muted-foreground">{isFetching ? "Carregando…" : "Sem dados."}</p>
       ) : (
@@ -236,6 +243,101 @@ function Ranking({
           ))}
         </ul>
       )}
+    </section>
+  );
+}
+
+const MANUAL_METHODS = ["dinheiro", "maquininha_credito", "maquininha_debito", "pix_salao"] as const;
+
+function ManualPayment() {
+  const qc = useQueryClient();
+  const [apptId, setApptId] = useState("");
+  const [method, setMethod] = useState<string>("dinheiro");
+  const [amount, setAmount] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const { data: open = [] } = useQuery({
+    queryKey: ["caixa-open"],
+    queryFn: async () => {
+      const since = new Date(Date.now() - 60 * 86400000).toISOString();
+      const { data, error } = await supabase
+        .from("appointments")
+        .select("id, user_id, starts_at, total_cents, paid_cents, services(name)")
+        .neq("status", "cancelled")
+        .gte("starts_at", since)
+        .order("starts_at");
+      if (error) throw error;
+      const rows = (data ?? []).filter((a) => a.paid_cents < a.total_cents);
+      const { data: profs } = await supabase.from("profiles").select("id, full_name, email");
+      const names = new Map((profs ?? []).map((p) => [p.id, p.full_name || p.email || "Cliente"]));
+      return rows.map((a) => ({ ...a, client: names.get(a.user_id) ?? "Cliente" }));
+    },
+  });
+
+  const sel = open.find((a) => a.id === apptId);
+  const remaining = sel ? sel.total_cents - sel.paid_cents : 0;
+
+  function pick(id: string) {
+    setApptId(id);
+    const a = open.find((x) => x.id === id);
+    setAmount(a ? ((a.total_cents - a.paid_cents) / 100).toFixed(2).replace(".", ",") : "");
+  }
+
+  async function save(): Promise<void> {
+    const cents = Math.round(Number(amount.replace(/\./g, "").replace(",", ".")) * 100);
+    if (!sel) { toast.error("Escolha o atendimento."); return; }
+    if (!cents || cents <= 0 || cents > remaining) { toast.error(`Valor deve ser até ${formatBRL(remaining)}.`); return; }
+    setSaving(true);
+    const { error } = await supabase.rpc("register_manual_payment", {
+      _appointment_id: sel.id,
+      _amount_cents: cents,
+      _method: method,
+    });
+    setSaving(false);
+    if (error) { toast.error("Não foi possível registrar o pagamento."); return; }
+    toast.success("Pagamento registrado no caixa.");
+    setApptId("");
+    setAmount("");
+    qc.invalidateQueries({ queryKey: ["caixa-open"] });
+    qc.invalidateQueries({ queryKey: ["caixa"] });
+    qc.invalidateQueries({ queryKey: ["appointments"] });
+  }
+
+  const selectCls = "h-10 w-full rounded-md border border-input bg-background px-3 text-sm";
+
+  return (
+    <section className="surface-card space-y-4 p-5">
+      <div>
+        <h2 className="font-display text-xl">Registrar pagamento no salão</h2>
+        <p className="text-sm text-muted-foreground">Para valores recebidos em dinheiro, maquininha ou Pix direto no salão.</p>
+      </div>
+      <div className="grid gap-3 md:grid-cols-[2fr_1fr_1fr_auto] md:items-end">
+        <div className="space-y-1.5">
+          <Label htmlFor="mp-appt">Atendimento</Label>
+          <select id="mp-appt" className={selectCls} value={apptId} onChange={(e) => pick(e.target.value)}>
+            <option value="">{open.length ? "Escolha…" : "Nenhum atendimento com saldo em aberto"}</option>
+            {open.map((a) => (
+              <option key={a.id} value={a.id}>
+                {new Date(a.starts_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                {" · "}{a.client} · {a.services?.name ?? "Serviço"} · falta {formatBRL(a.total_cents - a.paid_cents)}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="mp-method">Forma</Label>
+          <select id="mp-method" className={selectCls} value={method} onChange={(e) => setMethod(e.target.value)}>
+            {MANUAL_METHODS.map((m) => (
+              <option key={m} value={m}>{METHOD_LABEL[m]}</option>
+            ))}
+          </select>
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="mp-amount">Valor (R$)</Label>
+          <Input id="mp-amount" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0,00" />
+        </div>
+        <Button onClick={save} disabled={saving || !sel}>{saving ? "Salvando…" : "Registrar"}</Button>
+      </div>
     </section>
   );
 }
