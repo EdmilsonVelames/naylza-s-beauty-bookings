@@ -347,6 +347,14 @@ export type Database = {
         }
         Returns: boolean
       }
+      register_manual_payment: {
+        Args: {
+          _amount_cents: number
+          _appointment_id: string
+          _method: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "client"
