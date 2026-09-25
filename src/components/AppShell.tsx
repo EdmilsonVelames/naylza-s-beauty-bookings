@@ -85,6 +85,13 @@ export function AppShell({ children }: { children: ReactNode }) {
                 >
                   Serviços
                 </Link>
+                <Link
+                  to="/admin/caixa"
+                  activeProps={{ className: "bg-secondary text-secondary-foreground" }}
+                  className="rounded-full px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-secondary/70"
+                >
+                  Caixa
+                </Link>
               </>
             ) : null}
           </nav>
@@ -113,14 +120,24 @@ export function AppShell({ children }: { children: ReactNode }) {
             </Link>
           ))}
           {isAdmin ? (
-            <Link
-              to="/admin/schedule"
-              activeProps={{ className: "text-primary" }}
-              className="flex flex-col items-center gap-1 px-3 py-1 text-[11px] text-muted-foreground"
-            >
-              <Settings className="size-5" />
-              Salão
-            </Link>
+            <>
+              <Link
+                to="/admin/schedule"
+                activeProps={{ className: "text-primary" }}
+                className="flex flex-col items-center gap-1 px-3 py-1 text-[11px] text-muted-foreground"
+              >
+                <Settings className="size-5" />
+                Salão
+              </Link>
+              <Link
+                to="/admin/caixa"
+                activeProps={{ className: "text-primary" }}
+                className="flex flex-col items-center gap-1 px-3 py-1 text-[11px] text-muted-foreground"
+              >
+                <Wallet className="size-5" />
+                Caixa
+              </Link>
+            </>
           ) : null}
         </div>
       </nav>
