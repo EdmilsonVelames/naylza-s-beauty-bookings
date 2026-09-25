@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Plus, Trash2 } from "lucide-react";
+import { Check, Pencil, Plus, Trash2, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -83,6 +83,9 @@ function Professionals() {
   const queryClient = useQueryClient();
   const [name, setName] = useState("");
   const [specialty, setSpecialty] = useState("");
+  const [editId, setEditId] = useState<string | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editSpec, setEditSpec] = useState("");
 
   const { data } = useQuery({
     queryKey: ["professionals-admin"],
@@ -135,6 +138,24 @@ function Professionals() {
     refresh();
   }
 
+  async function saveEdit(id: string) {
+    if (!editName.trim()) {
+      toast.error("Informe o nome da profissional.");
+      return;
+    }
+    const { error } = await supabase
+      .from("professionals")
+      .update({ name: editName.trim(), specialty: editSpec.trim() })
+      .eq("id", id);
+    if (error) {
+      toast.error("Não foi possível salvar.");
+      return;
+    }
+    setEditId(null);
+    toast.success("Profissional atualizada.");
+    refresh();
+  }
+
   return (
     <div className="space-y-4">
       <div className="surface-card grid gap-3 p-5 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
@@ -157,21 +178,52 @@ function Professionals() {
       </div>
 
       <ul className="space-y-3">
-        {(data ?? []).map((p) => (
-          <li key={p.id} className="surface-card flex flex-wrap items-center gap-4 p-4">
-            <div className="flex-1">
-              <p className="font-medium">{p.name}</p>
-              <p className="text-sm text-muted-foreground">{p.specialty}</p>
-            </div>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Switch checked={p.active} onCheckedChange={(v) => toggle(p.id, v)} />
-              {p.active ? "Atendendo" : "Inativa"}
-            </div>
-            <Button size="icon" variant="ghost" onClick={() => remove(p.id)}>
-              <Trash2 className="size-4" />
-            </Button>
-          </li>
-        ))}
+        {(data ?? []).map((p) =>
+          editId === p.id ? (
+            <li key={p.id} className="surface-card grid gap-3 p-4 sm:grid-cols-[1fr_1fr_auto_auto] sm:items-end">
+              <div className="space-y-1.5">
+                <Label htmlFor={`en-${p.id}`}>Nome</Label>
+                <Input id={`en-${p.id}`} value={editName} onChange={(e) => setEditName(e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor={`es-${p.id}`}>Especialidade</Label>
+                <Input id={`es-${p.id}`} value={editSpec} onChange={(e) => setEditSpec(e.target.value)} />
+              </div>
+              <Button onClick={() => saveEdit(p.id)}>
+                <Check className="size-4" /> Salvar
+              </Button>
+              <Button variant="ghost" onClick={() => setEditId(null)}>
+                <X className="size-4" /> Cancelar
+              </Button>
+            </li>
+          ) : (
+            <li key={p.id} className="surface-card flex flex-wrap items-center gap-4 p-4">
+              <div className="flex-1">
+                <p className="font-medium">{p.name}</p>
+                <p className="text-sm text-muted-foreground">{p.specialty}</p>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Switch checked={p.active} onCheckedChange={(v) => toggle(p.id, v)} />
+                {p.active ? "Atendendo" : "Inativa"}
+              </div>
+              <Button
+                size="icon"
+                variant="ghost"
+                aria-label="Editar"
+                onClick={() => {
+                  setEditId(p.id);
+                  setEditName(p.name);
+                  setEditSpec(p.specialty ?? "");
+                }}
+              >
+                <Pencil className="size-4" />
+              </Button>
+              <Button size="icon" variant="ghost" aria-label="Remover" onClick={() => remove(p.id)}>
+                <Trash2 className="size-4" />
+              </Button>
+            </li>
+          ),
+        )}
       </ul>
     </div>
   );
