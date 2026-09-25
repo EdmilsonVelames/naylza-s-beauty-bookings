@@ -126,6 +126,9 @@ function AdminSchedule() {
         <p className="mt-1 text-muted-foreground">Horários do dia e bloqueios por profissional.</p>
       </div>
 
+      <ConfirmedList professionals={professionals ?? []} />
+
+      <h2 className="font-display text-2xl">Horários por profissional</h2>
       <div className="flex flex-wrap gap-2">
         {(professionals ?? []).map((p) => (
           <button
@@ -224,5 +227,101 @@ function AdminSchedule() {
         )}
       </section>
     </div>
+  );
+}
+
+function ConfirmedList({ professionals }: { professionals: { id: string; name: string }[] }) {
+  const [pro, setPro] = useState("");
+  const { data = [], isLoading } = useQuery({
+    queryKey: ["admin-confirmed"],
+    queryFn: async () => {
+      const start = new Date();
+      start.setHours(0, 0, 0, 0);
+      const [appts, profs] = await Promise.all([
+        supabase
+          .from("appointments")
+          .select("id, user_id, professional_id, starts_at, total_cents, paid_cents, status, services(name, duration_min), professionals(name)")
+          .in("status", ["confirmed", "paid"])
+          .gte("starts_at", start.toISOString())
+          .order("starts_at"),
+        supabase.from("profiles").select("id, full_name, phone, email"),
+      ]);
+      if (appts.error) throw appts.error;
+      const byId = new Map((profs.data ?? []).map((p) => [p.id, p]));
+      return (appts.data ?? []).map((a) => ({ ...a, client: byId.get(a.user_id) }));
+    },
+  });
+
+  const rows = pro ? data.filter((a) => a.professional_id === pro) : data;
+  const groups = new Map<string, typeof rows>();
+  for (const a of rows) {
+    const k = new Date(a.starts_at).toDateString();
+    groups.set(k, [...(groups.get(k) ?? []), a]);
+  }
+  const todayKey = new Date().toDateString();
+  const chip = (active: boolean) =>
+    cn(
+      "rounded-full border border-border px-4 py-1.5 text-sm",
+      active ? "bg-primary text-primary-foreground border-transparent" : "bg-card",
+    );
+
+  return (
+    <section className="space-y-3">
+      <div>
+        <h2 className="font-display text-2xl">Agendamentos confirmados</h2>
+        <p className="text-sm text-muted-foreground">
+          Todos os próximos atendimentos com sinal pago, de hoje em diante.
+        </p>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <button className={chip(pro === "")} onClick={() => setPro("")}>
+          Todas ({data.length})
+        </button>
+        {professionals.map((p) => (
+          <button key={p.id} className={chip(pro === p.id)} onClick={() => setPro(p.id)}>
+            {p.name} ({data.filter((a) => a.professional_id === p.id).length})
+          </button>
+        ))}
+      </div>
+      {isLoading ? (
+        <p className="text-sm text-muted-foreground">Carregando…</p>
+      ) : rows.length === 0 ? (
+        <p className="surface-card p-5 text-sm text-muted-foreground">Nenhum agendamento confirmado.</p>
+      ) : (
+        <div className="max-h-[560px] space-y-4 overflow-y-auto pr-1">
+          {[...groups.entries()].map(([k, list]) => (
+            <div key={k} className="space-y-2">
+              <p className="sticky top-0 z-10 bg-background py-1 text-sm font-semibold capitalize">
+                {k === todayKey ? "Hoje" : formatDayLabel(new Date(k))} · {list.length}
+              </p>
+              <ul className="space-y-2">
+                {list.map((a) => {
+                  const rest = a.total_cents - a.paid_cents;
+                  return (
+                    <li key={a.id} className="surface-card flex flex-wrap items-center gap-3 p-3">
+                      <span className="font-display text-xl">
+                        {new Date(a.starts_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium">
+                          {a.services?.name} <span className="text-muted-foreground">· {a.professionals?.name}</span>
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {a.client?.full_name || a.client?.email || "Cliente"}
+                          {a.client?.phone ? ` · ${a.client.phone}` : ""}
+                        </p>
+                      </div>
+                      <span className={cn("text-sm", rest > 0 ? "text-muted-foreground" : "text-primary")}>
+                        {rest > 0 ? `Falta ${formatBRL(rest)}` : "Totalmente pago"}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
   );
 }
