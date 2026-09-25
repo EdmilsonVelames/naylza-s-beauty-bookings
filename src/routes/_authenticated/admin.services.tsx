@@ -277,7 +277,6 @@ function AdminServices() {
               </div>
             </div>
           </div>
-          </div>
           <DialogFooter>
             <Button onClick={save}>Salvar</Button>
           </DialogFooter>
