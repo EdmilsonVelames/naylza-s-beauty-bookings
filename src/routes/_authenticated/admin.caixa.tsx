@@ -283,10 +283,10 @@ function ManualPayment() {
     setAmount(a ? ((a.total_cents - a.paid_cents) / 100).toFixed(2).replace(".", ",") : "");
   }
 
-  async function save() {
+  async function save(): Promise<void> {
     const cents = Math.round(Number(amount.replace(/\./g, "").replace(",", ".")) * 100);
-    if (!sel) return toast.error("Escolha o atendimento.");
-    if (!cents || cents <= 0 || cents > remaining) return toast.error(`Valor deve ser até ${formatBRL(remaining)}.`);
+    if (!sel) { toast.error("Escolha o atendimento."); return; }
+    if (!cents || cents <= 0 || cents > remaining) { toast.error(`Valor deve ser até ${formatBRL(remaining)}.`); return; }
     setSaving(true);
     const { error } = await supabase.rpc("register_manual_payment", {
       _appointment_id: sel.id,
@@ -294,7 +294,7 @@ function ManualPayment() {
       _method: method,
     });
     setSaving(false);
-    if (error) return toast.error("Não foi possível registrar o pagamento.");
+    if (error) { toast.error("Não foi possível registrar o pagamento."); return; }
     toast.success("Pagamento registrado no caixa.");
     setApptId("");
     setAmount("");
