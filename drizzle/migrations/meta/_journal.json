@@ -57,6 +57,13 @@
       "when": 1790298558596,
       "tag": "0007_manual_salon_payments",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1790380595684,
+      "tag": "0008_professional_accounts",
+      "breakpoints": true
     }
   ]
 }
