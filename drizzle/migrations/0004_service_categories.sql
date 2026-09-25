@@ -1,0 +1,1 @@
+ALTER TABLE public.services ADD COLUMN category TEXT NOT NULL DEFAULT 'unhas' CHECK (category IN ('unhas','cilios','sobrancelhas'));
