@@ -106,6 +106,57 @@ function Profile() {
           </Button>
         </div>
       </div>
+
+      <ChangePassword />
+    </div>
+  );
+}
+
+function ChangePassword() {
+  const [pwd, setPwd] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function change() {
+    if (pwd.length < 6) {
+      toast.error("A senha precisa ter pelo menos 6 caracteres.");
+      return;
+    }
+    if (pwd !== confirm) {
+      toast.error("As senhas não conferem.");
+      return;
+    }
+    setBusy(true);
+    const { error } = await supabase.auth.updateUser({ password: pwd });
+    setBusy(false);
+    if (error) {
+      toast.error("Não foi possível trocar a senha.");
+      return;
+    }
+    setPwd("");
+    setConfirm("");
+    toast.success("Senha alterada.");
+  }
+
+  return (
+    <div className="surface-card space-y-4 p-6">
+      <h2 className="font-display text-2xl">Trocar senha</h2>
+      <div className="space-y-1.5">
+        <Label htmlFor="new-pwd">Nova senha</Label>
+        <Input id="new-pwd" type="password" value={pwd} onChange={(e) => setPwd(e.target.value)} />
+      </div>
+      <div className="space-y-1.5">
+        <Label htmlFor="conf-pwd">Confirmar nova senha</Label>
+        <Input
+          id="conf-pwd"
+          type="password"
+          value={confirm}
+          onChange={(e) => setConfirm(e.target.value)}
+        />
+      </div>
+      <Button disabled={busy} onClick={change}>
+        {busy ? "Salvando…" : "Trocar senha"}
+      </Button>
     </div>
   );
 }
