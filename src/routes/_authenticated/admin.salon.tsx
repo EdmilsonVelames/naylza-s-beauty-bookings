@@ -588,3 +588,60 @@ function Values() {
     </div>
   );
 }
+
+function AccountLink({
+  professionalId,
+  userId,
+  onSaved,
+}: {
+  professionalId: string;
+  userId: string | null;
+  onSaved: () => void;
+}) {
+  const { data: accounts } = useQuery({
+    queryKey: ["accounts-list"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, full_name, email")
+        .order("full_name");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  async function change(value: string) {
+    const { error } = await supabase
+      .from("professionals")
+      .update({ user_id: value || null })
+      .eq("id", professionalId);
+    if (error) {
+      toast.error(
+        error.code === "23505"
+          ? "Essa conta já está ligada a outra profissional."
+          : "Não foi possível salvar o acesso.",
+      );
+      return;
+    }
+    toast.success(value ? "Acesso de profissional liberado." : "Acesso removido.");
+    onSaved();
+  }
+
+  return (
+    <label className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+      Conta de acesso:
+      <select
+        value={userId ?? ""}
+        onChange={(e) => change(e.target.value)}
+        className="rounded-md border border-border bg-card px-2 py-1 text-sm text-foreground"
+      >
+        <option value="">Sem acesso</option>
+        {(accounts ?? []).map((a) => (
+          <option key={a.id} value={a.id}>
+            {a.full_name || a.email} {a.full_name ? `(${a.email})` : ""}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
