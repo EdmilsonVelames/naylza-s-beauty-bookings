@@ -201,6 +201,7 @@ function Professionals() {
               <div className="flex-1">
                 <p className="font-medium">{p.name}</p>
                 <p className="text-sm text-muted-foreground">{p.specialty}</p>
+                <AccountLink professionalId={p.id} userId={p.user_id} onSaved={refresh} />
               </div>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Switch checked={p.active} onCheckedChange={(v) => toggle(p.id, v)} />
