@@ -43,6 +43,13 @@
       "when": 1790297364791,
       "tag": "0005_editable_service_categories",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790298075507,
+      "tag": "0006_admin_read_profiles",
+      "breakpoints": true
     }
   ]
 }
