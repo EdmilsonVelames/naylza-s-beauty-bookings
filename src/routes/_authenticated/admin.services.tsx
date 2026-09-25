@@ -37,13 +37,7 @@ export const Route = createFileRoute("/_authenticated/admin/services")({
   component: AdminServices,
 });
 
-type Category = "unhas" | "cilios" | "sobrancelhas";
-
-const CATEGORIES: { value: Category; label: string }[] = [
-  { value: "unhas", label: "Unhas" },
-  { value: "cilios", label: "Cílios" },
-  { value: "sobrancelhas", label: "Sobrancelhas" },
-];
+type Category = string;
 
 type FormState = {
   id?: string;
@@ -59,7 +53,7 @@ const EMPTY: FormState = {
   description: "",
   price: "",
   duration: "60",
-  category: "unhas",
+  category: "",
 };
 
 function AdminServices() {
@@ -77,13 +71,27 @@ function AdminServices() {
     },
   });
 
+  const { data: cats } = useQuery({
+    queryKey: ["service-categories"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("service_categories")
+        .select("*")
+        .order("position")
+        .order("name");
+      if (error) throw error;
+      return data;
+    },
+  });
+  const CATEGORIES = (cats ?? []).map((c) => ({ value: c.id, label: c.name }));
+
   async function save() {
     const payload = {
       name: form.name,
       description: form.description,
       price_cents: Math.round(Number(form.price.replace(",", ".")) * 100) || 0,
       duration_min: Number(form.duration) || 60,
-      category: form.category,
+      category_id: form.category || null,
     };
     const res = form.id
       ? await supabase.from("services").update(payload).eq("id", form.id)
@@ -130,7 +138,7 @@ function AdminServices() {
         </div>
         <Button
           onClick={() => {
-            setForm(EMPTY);
+            setForm({ ...EMPTY, category: CATEGORIES[0]?.value ?? "" });
             setOpen(true);
           }}
         >
@@ -138,8 +146,10 @@ function AdminServices() {
         </Button>
       </div>
 
+      <CategoryManager />
+
       {CATEGORIES.map((cat) => {
-        const list = (services ?? []).filter((s) => s.category === cat.value);
+        const list = (services ?? []).filter((s) => s.category_id === cat.value);
         return (
           <section key={cat.value} className="space-y-3">
             <div className="flex items-center justify-between">
@@ -192,7 +202,7 @@ function AdminServices() {
                                   description: s.description,
                                   price: (s.price_cents / 100).toFixed(2),
                                   duration: String(s.duration_min),
-                                  category: s.category as Category,
+                                  category: s.category_id ?? "",
                                 });
                                 setOpen(true);
                               }}
@@ -283,5 +293,112 @@ function AdminServices() {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+function CategoryManager() {
+  const queryClient = useQueryClient();
+  const [newName, setNewName] = useState("");
+  const [edits, setEdits] = useState<Record<string, string>>({});
+  const { data: cats } = useQuery({
+    queryKey: ["service-categories"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("service_categories")
+        .select("*")
+        .order("position")
+        .order("name");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  function refresh() {
+    queryClient.invalidateQueries({ queryKey: ["service-categories"] });
+    queryClient.invalidateQueries({ queryKey: ["services-admin"] });
+  }
+
+  async function add() {
+    if (!newName.trim()) {
+      toast.error("Informe o nome da categoria.");
+      return;
+    }
+    const { error } = await supabase
+      .from("service_categories")
+      .insert({ name: newName.trim(), position: (cats?.length ?? 0) + 1 });
+    if (error) {
+      toast.error("Não foi possível adicionar a categoria.");
+      return;
+    }
+    setNewName("");
+    toast.success("Categoria adicionada.");
+    refresh();
+  }
+
+  async function rename(id: string) {
+    const name = edits[id]?.trim();
+    if (!name) {
+      toast.error("Informe o nome da categoria.");
+      return;
+    }
+    const { error } = await supabase.from("service_categories").update({ name }).eq("id", id);
+    if (error) {
+      toast.error("Não foi possível salvar.");
+      return;
+    }
+    setEdits((e) => {
+      const n = { ...e };
+      delete n[id];
+      return n;
+    });
+    toast.success("Categoria atualizada.");
+    refresh();
+  }
+
+  async function remove(id: string) {
+    const { error } = await supabase.from("service_categories").delete().eq("id", id);
+    if (error) {
+      toast.error("Não foi possível remover a categoria.");
+      return;
+    }
+    toast.success("Categoria removida. Os serviços dela ficaram sem categoria.");
+    refresh();
+  }
+
+  return (
+    <section className="surface-card space-y-4 p-5">
+      <h2 className="font-display text-2xl">Categorias</h2>
+      <ul className="space-y-2">
+        {(cats ?? []).map((c) => (
+          <li key={c.id} className="flex flex-wrap items-center gap-2">
+            <Input
+              className="max-w-xs"
+              aria-label="Nome da categoria"
+              value={edits[c.id] ?? c.name}
+              onChange={(e) => setEdits({ ...edits, [c.id]: e.target.value })}
+            />
+            {edits[c.id] !== undefined && edits[c.id] !== c.name && (
+              <Button size="sm" onClick={() => rename(c.id)}>
+                Salvar
+              </Button>
+            )}
+            <Button size="icon" variant="ghost" aria-label="Remover" onClick={() => remove(c.id)}>
+              <Trash2 className="size-4" />
+            </Button>
+          </li>
+        ))}
+      </ul>
+      <div className="flex flex-wrap gap-2">
+        <Input
+          className="max-w-xs"
+          placeholder="Nova categoria"
+          value={newName}
+          onChange={(e) => setNewName(e.target.value)}
+        />
+        <Button variant="outline" onClick={add}>
+          <Plus className="size-4" /> Adicionar categoria
+        </Button>
+      </div>
+    </section>
   );
 }
