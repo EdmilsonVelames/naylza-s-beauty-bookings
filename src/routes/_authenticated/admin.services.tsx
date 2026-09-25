@@ -37,15 +37,30 @@ export const Route = createFileRoute("/_authenticated/admin/services")({
   component: AdminServices,
 });
 
+type Category = "unhas" | "cilios" | "sobrancelhas";
+
+const CATEGORIES: { value: Category; label: string }[] = [
+  { value: "unhas", label: "Unhas" },
+  { value: "cilios", label: "Cílios" },
+  { value: "sobrancelhas", label: "Sobrancelhas" },
+];
+
 type FormState = {
   id?: string;
   name: string;
   description: string;
   price: string;
   duration: string;
+  category: Category;
 };
 
-const EMPTY: FormState = { name: "", description: "", price: "", duration: "60" };
+const EMPTY: FormState = {
+  name: "",
+  description: "",
+  price: "",
+  duration: "60",
+  category: "unhas",
+};
 
 function AdminServices() {
   const queryClient = useQueryClient();
@@ -68,6 +83,7 @@ function AdminServices() {
       description: form.description,
       price_cents: Math.round(Number(form.price.replace(",", ".")) * 100) || 0,
       duration_min: Number(form.duration) || 60,
+      category: form.category,
     };
     const res = form.id
       ? await supabase.from("services").update(payload).eq("id", form.id)
@@ -122,53 +138,86 @@ function AdminServices() {
         </Button>
       </div>
 
-      <div className="surface-card overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Serviço</TableHead>
-              <TableHead>Duração</TableHead>
-              <TableHead>Preço</TableHead>
-              <TableHead className="text-right">Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {(services ?? []).map((s) => (
-              <TableRow key={s.id}>
-                <TableCell>
-                  <p className="font-medium">{s.name}</p>
-                  <p className="text-sm text-muted-foreground">{s.description}</p>
-                </TableCell>
-                <TableCell>{s.duration_min} min</TableCell>
-                <TableCell>{formatBRL(s.price_cents)}</TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      onClick={() => {
-                        setForm({
-                          id: s.id,
-                          name: s.name,
-                          description: s.description,
-                          price: (s.price_cents / 100).toFixed(2),
-                          duration: String(s.duration_min),
-                        });
-                        setOpen(true);
-                      }}
-                    >
-                      <Pencil className="size-4" />
-                    </Button>
-                    <Button size="icon" variant="ghost" onClick={() => remove(s.id)}>
-                      <Trash2 className="size-4" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+      {CATEGORIES.map((cat) => {
+        const list = (services ?? []).filter((s) => s.category === cat.value);
+        return (
+          <section key={cat.value} className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h2 className="font-display text-2xl">{cat.label}</h2>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  setForm({ ...EMPTY, category: cat.value });
+                  setOpen(true);
+                }}
+              >
+                <Plus className="size-4" /> Adicionar
+              </Button>
+            </div>
+            <div className="surface-card overflow-hidden">
+              {list.length === 0 ? (
+                <p className="p-5 text-sm text-muted-foreground">
+                  Nenhum serviço de {cat.label.toLowerCase()} cadastrado.
+                </p>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Serviço</TableHead>
+                      <TableHead>Duração</TableHead>
+                      <TableHead>Preço</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {list.map((s) => (
+                      <TableRow key={s.id}>
+                        <TableCell>
+                          <p className="font-medium">{s.name}</p>
+                          <p className="text-sm text-muted-foreground">{s.description}</p>
+                        </TableCell>
+                        <TableCell>{s.duration_min} min</TableCell>
+                        <TableCell>{formatBRL(s.price_cents)}</TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              aria-label="Editar"
+                              onClick={() => {
+                                setForm({
+                                  id: s.id,
+                                  name: s.name,
+                                  description: s.description,
+                                  price: (s.price_cents / 100).toFixed(2),
+                                  duration: String(s.duration_min),
+                                  category: s.category as Category,
+                                });
+                                setOpen(true);
+                              }}
+                            >
+                              <Pencil className="size-4" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              aria-label="Remover"
+                              onClick={() => remove(s.id)}
+                            >
+                              <Trash2 className="size-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </div>
+          </section>
+        );
+      })}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
@@ -176,6 +225,22 @@ function AdminServices() {
             <DialogTitle>{form.id ? "Editar serviço" : "Novo serviço"}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label>Categoria</Label>
+              <div className="flex gap-2">
+                {CATEGORIES.map((c) => (
+                  <Button
+                    key={c.value}
+                    type="button"
+                    size="sm"
+                    variant={form.category === c.value ? "default" : "outline"}
+                    onClick={() => setForm({ ...form, category: c.value })}
+                  >
+                    {c.label}
+                  </Button>
+                ))}
+              </div>
+            </div>
             <div className="space-y-1.5">
               <Label htmlFor="s-name">Nome</Label>
               <Input
@@ -211,6 +276,7 @@ function AdminServices() {
                 />
               </div>
             </div>
+          </div>
           </div>
           <DialogFooter>
             <Button onClick={save}>Salvar</Button>
