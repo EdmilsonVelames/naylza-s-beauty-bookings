@@ -138,7 +138,7 @@ function AdminServices() {
         </div>
         <Button
           onClick={() => {
-            setForm(EMPTY);
+            setForm({ ...EMPTY, category: CATEGORIES[0]?.value ?? "" });
             setOpen(true);
           }}
         >
