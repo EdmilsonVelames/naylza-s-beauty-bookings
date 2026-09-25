@@ -29,10 +29,28 @@ export function useIsAdmin() {
   });
 }
 
+/** Professional record linked to the signed-in account, or null. */
+export function useMyProfessional() {
+  return useQuery({
+    queryKey: ["my-professional"],
+    queryFn: async () => {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) return null;
+      const { data } = await supabase
+        .from("professionals")
+        .select("id, name")
+        .eq("user_id", userData.user.id)
+        .maybeSingle();
+      return data ?? null;
+    },
+  });
+}
+
 export function AppShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { data: isAdmin } = useIsAdmin();
+  const { data: myPro } = useMyProfessional();
 
   async function signOut() {
     await queryClient.cancelQueries();

@@ -156,18 +156,21 @@ export type Database = {
           id: string
           name: string
           specialty: string
+          user_id: string | null
         }
         Insert: {
           active?: boolean
           id?: string
           name: string
           specialty?: string
+          user_id?: string | null
         }
         Update: {
           active?: boolean
           id?: string
           name?: string
           specialty?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -347,6 +350,11 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_client_of_professional: {
+        Args: { _client: string; _user_id: string }
+        Returns: boolean
+      }
+      professional_id_of: { Args: { _user_id: string }; Returns: string }
       register_manual_payment: {
         Args: {
           _amount_cents: number

@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { useIsAdmin } from "@/components/AppShell";
+import { useIsAdmin, useMyProfessional } from "@/components/AppShell";
 import { buildSlots, formatBRL, formatDayLabel, sameDayRange, toIsoSlot } from "@/lib/salon";
 import { useSalonSettings, DEFAULT_HOURS } from "@/hooks/useSalonSettings";
 import { cn } from "@/lib/utils";
@@ -24,7 +24,9 @@ export const Route = createFileRoute("/_authenticated/admin/schedule")({
 
 function AdminSchedule() {
   const queryClient = useQueryClient();
-  const { data: isAdmin, isLoading: loadingRole } = useIsAdmin();
+  const { data: isAdmin, isLoading: loadingAdmin } = useIsAdmin();
+  const { data: myPro, isLoading: loadingPro } = useMyProfessional();
+  const loadingRole = loadingAdmin || loadingPro;
   const days = useMemo(
     () =>
       Array.from({ length: 14 }, (_, i) => {
@@ -46,7 +48,7 @@ function AdminSchedule() {
   });
   const [professionalId, setProfessionalId] = useState<string>("");
 
-  const { data: professionals } = useQuery({
+  const { data: allProfessionals } = useQuery({
     queryKey: ["professionals"],
     queryFn: async () => {
       const { data, error } = await supabase.from("professionals").select("*").order("name");
@@ -55,6 +57,9 @@ function AdminSchedule() {
     },
   });
 
+  const professionals = isAdmin
+    ? allProfessionals
+    : (allProfessionals ?? []).filter((p) => p.id === myPro?.id);
   const activeProfessional = professionalId || professionals?.[0]?.id || "";
 
   const { data: dayData } = useQuery({
@@ -108,7 +113,7 @@ function AdminSchedule() {
   }
 
   if (loadingRole) return <p className="text-sm text-muted-foreground">Carregando…</p>;
-  if (!isAdmin) {
+  if (!isAdmin && !myPro) {
     return (
       <div className="surface-card p-6">
         <h1 className="font-display text-2xl">Área do salão</h1>
@@ -122,7 +127,7 @@ function AdminSchedule() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-display text-4xl">Agenda do salão</h1>
+        <h1 className="font-display text-4xl">{isAdmin ? "Agenda do salão" : "Minha agenda"}</h1>
         <p className="mt-1 text-muted-foreground">Horários do dia e bloqueios por profissional.</p>
       </div>
 
