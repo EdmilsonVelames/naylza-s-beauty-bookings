@@ -131,6 +131,7 @@ function AdminSchedule() {
         <p className="mt-1 text-muted-foreground">Horários do dia e bloqueios por profissional.</p>
       </div>
 
+      <PendingDeposits />
       <ConfirmedList professionals={professionals ?? []} />
 
       <h2 className="font-display text-2xl">Horários por profissional</h2>
