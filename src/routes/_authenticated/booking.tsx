@@ -25,6 +25,10 @@ import {
 } from "@/lib/salon";
 import { useSalonSettings } from "@/hooks/useSalonSettings";
 import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
+import { useIsStaff } from "@/components/AppShell";
+import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/_authenticated/booking")({
   head: () => ({
@@ -54,6 +58,40 @@ function Booking() {
   const [professionalId, setProfessionalId] = useState<string>("");
   const [day, setDay] = useState<Date>(days[0]!);
   const [time, setTime] = useState<string>("");
+  const [categoryId, setCategoryId] = useState<string | null>(null);
+  const { isStaff, isAdmin, myPro } = useIsStaff();
+  const queryClient = useQueryClient();
+  const [clientMode, setClientMode] = useState<"registered" | "guest">("registered");
+  const [clientId, setClientId] = useState("");
+  const [guestName, setGuestName] = useState("");
+  const [guestPhone, setGuestPhone] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const { data: categories } = useQuery({
+    queryKey: ["service-categories"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("service_categories")
+        .select("*")
+        .order("position")
+        .order("name");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: clients } = useQuery({
+    queryKey: ["staff-clients-list"],
+    enabled: isStaff,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, full_name, email, phone")
+        .order("full_name");
+      if (error) throw error;
+      return data;
+    },
+  });
 
   const { data: services } = useQuery({
     queryKey: ["services"],
@@ -142,7 +180,49 @@ function Booking() {
   const professional = professionals?.find((p) => p.id === professionalId);
   const ready = Boolean(service && professional && time);
 
+  const clientReady =
+    !isStaff || (clientMode === "registered" ? Boolean(clientId) : guestName.trim().length > 1);
+
+  async function createForClient() {
+    if (!service || !professional || !time) return;
+    const { data: u } = await supabase.auth.getUser();
+    if (!u.user) return;
+    setSaving(true);
+    const { error } = await supabase.from("appointments").insert({
+      user_id: clientMode === "registered" ? clientId : u.user.id,
+      guest_name: clientMode === "guest" ? guestName.trim() : "",
+      guest_phone: clientMode === "guest" ? guestPhone.trim() : "",
+      created_by: u.user.id,
+      service_id: service.id,
+      professional_id: professional.id,
+      starts_at: toIsoSlot(day, time),
+      total_cents: service.price_cents,
+      paid_cents: 0,
+      payment_method: "salao",
+      status: "confirmed",
+    });
+    setSaving(false);
+    if (error) {
+      toast.error(
+        error.code === "23505"
+          ? "Este horário acabou de ser reservado. Escolha outro."
+          : "Não foi possível criar o agendamento.",
+      );
+      return;
+    }
+    toast.success("Agendamento criado para a cliente.");
+    setTime("");
+    setGuestName("");
+    setGuestPhone("");
+    setClientId("");
+    queryClient.invalidateQueries({ queryKey: ["slots"] });
+  }
+
   function continueToCheckout() {
+    if (isStaff) {
+      void createForClient();
+      return;
+    }
     if (!service || !professional || !time) return;
     saveDraft({
       serviceId: service.id,
@@ -164,33 +244,117 @@ function Booking() {
         </p>
       </div>
 
+      {isStaff ? (
+        <section className="surface-card space-y-3 p-4">
+          <h2 className="font-display text-2xl">Cliente</h2>
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              variant={clientMode === "registered" ? "default" : "outline"}
+              onClick={() => setClientMode("registered")}
+            >
+              Cliente cadastrada
+            </Button>
+            <Button
+              size="sm"
+              variant={clientMode === "guest" ? "default" : "outline"}
+              onClick={() => setClientMode("guest")}
+            >
+              Sem cadastro
+            </Button>
+          </div>
+          {clientMode === "registered" ? (
+            <Select value={clientId} onValueChange={setClientId}>
+              <SelectTrigger className="w-full sm:w-96">
+                <SelectValue placeholder="Escolha a cliente" />
+              </SelectTrigger>
+              <SelectContent>
+                {(clients ?? []).map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.full_name || c.email} {c.phone ? `— ${c.phone}` : ""}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : (
+            <div className="grid gap-2 sm:grid-cols-2">
+              <Input placeholder="Nome da cliente" value={guestName} onChange={(e) => setGuestName(e.target.value)} />
+              <Input placeholder="Telefone" value={guestPhone} onChange={(e) => setGuestPhone(e.target.value)} />
+            </div>
+          )}
+        </section>
+      ) : null}
+
       <section className="space-y-3">
         <h2 className="font-display text-2xl">1. Serviço</h2>
-        <div className="grid gap-3 sm:grid-cols-2">
-          {(services ?? []).map((s) => (
-            <button
-              key={s.id}
-              onClick={() => setServiceId(s.id)}
-              className={cn(
-                "surface-card p-4 text-left transition-all hover:shadow-[var(--shadow-lift)]",
-                serviceId === s.id && "ring-2 ring-primary",
-              )}
+        {!categoryId ? (
+          <div className="grid gap-3 sm:grid-cols-3">
+            {[
+              ...(categories ?? []),
+              ...((services ?? []).some((s) => !s.category_id)
+                ? [{ id: "none", name: "Outros" }]
+                : []),
+            ].map((c) => {
+              const count = (services ?? []).filter((s) =>
+                c.id === "none" ? !s.category_id : s.category_id === c.id,
+              ).length;
+              if (!count) return null;
+              return (
+                <button
+                  key={c.id}
+                  onClick={() => setCategoryId(c.id)}
+                  className="surface-card p-5 text-left transition-all hover:shadow-[var(--shadow-lift)]"
+                >
+                  <p className="font-display text-2xl">{c.name}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {count} {count === 1 ? "serviço" : "serviços"}
+                  </p>
+                </button>
+              );
+            })}
+          </div>
+        ) : (
+          <>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setCategoryId(null);
+                setServiceId("");
+                setTime("");
+              }}
             >
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="font-medium">{s.name}</p>
-                  <p className="text-sm text-muted-foreground">{s.description}</p>
-                </div>
-                <span className="whitespace-nowrap font-display text-lg">
-                  {formatBRL(s.price_cents)}
-                </span>
-              </div>
-              <p className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
-                <Clock className="size-3.5" /> {s.duration_min} min
-              </p>
-            </button>
-          ))}
-        </div>
+              ← Categorias
+            </Button>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {(services ?? [])
+                .filter((s) => (categoryId === "none" ? !s.category_id : s.category_id === categoryId))
+                .map((s) => (
+                  <button
+                    key={s.id}
+                    onClick={() => setServiceId(s.id)}
+                    className={cn(
+                      "surface-card p-4 text-left transition-all hover:shadow-[var(--shadow-lift)]",
+                      serviceId === s.id && "ring-2 ring-primary",
+                    )}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="font-medium">{s.name}</p>
+                        <p className="text-sm text-muted-foreground">{s.description}</p>
+                      </div>
+                      <span className="whitespace-nowrap font-display text-lg">
+                        {formatBRL(s.price_cents)}
+                      </span>
+                    </div>
+                    <p className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <Clock className="size-3.5" /> {s.duration_min} min
+                    </p>
+                  </button>
+                ))}
+            </div>
+          </>
+        )}
       </section>
 
       <section className="space-y-3">
@@ -200,7 +364,9 @@ function Booking() {
             <SelectValue placeholder="Escolha a profissional" />
           </SelectTrigger>
           <SelectContent>
-            {(professionals ?? []).map((p) => (
+            {(professionals ?? [])
+              .filter((p) => isAdmin || !myPro || p.id === myPro.id)
+              .map((p) => (
               <SelectItem key={p.id} value={p.id}>
                 {p.name} — {p.specialty}
               </SelectItem>
@@ -277,8 +443,8 @@ function Booking() {
             {service ? formatBRL(Math.round(service.price_cents / 2)) : "—"}
           </p>
         </div>
-        <Button disabled={!ready} onClick={continueToCheckout}>
-          Continuar para pagamento
+        <Button disabled={!ready || !clientReady || saving} onClick={continueToCheckout}>
+          {isStaff ? (saving ? "Salvando…" : "Criar agendamento") : "Continuar para pagamento"}
         </Button>
       </div>
     </div>
