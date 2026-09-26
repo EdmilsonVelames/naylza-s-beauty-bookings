@@ -27,8 +27,8 @@ function ResetPassword() {
   const [busy, setBusy] = useState(false);
 
   async function save() {
-    if (pwd.length < 6) return toast.error("A senha precisa ter pelo menos 6 caracteres.");
-    if (pwd !== confirm) return toast.error("As senhas não conferem.");
+    if (pwd.length < 6) { toast.error("A senha precisa ter pelo menos 6 caracteres."); return; }
+    if (pwd !== confirm) { toast.error("As senhas não conferem."); return; }
     setBusy(true);
     const { error } = await supabase.auth.updateUser({ password: pwd });
     setBusy(false);

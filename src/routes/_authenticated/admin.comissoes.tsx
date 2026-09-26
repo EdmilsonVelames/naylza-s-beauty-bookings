@@ -114,7 +114,7 @@ function Row({
 
   async function save() {
     const { error } = await supabase.from("professionals").update({ commission_percent: n }).eq("id", row.id);
-    if (error) return toast.error("Não foi possível salvar.");
+    if (error) { toast.error("Não foi possível salvar."); return; }
     toast.success("Percentual atualizado.");
     onSaved();
   }

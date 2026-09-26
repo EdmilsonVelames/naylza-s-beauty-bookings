@@ -134,7 +134,7 @@ function ClientCard({
   onSaved,
 }: {
   client: Client;
-  note?: { phone: string; notes: string };
+  note?: { phone: string; notes: string } | undefined;
   onSaved: () => void;
 }) {
   const [phone, setPhone] = useState(note?.phone || client.phone);
@@ -153,7 +153,7 @@ function ClientCard({
     if (client.userId) ops.push(supabase.from("profiles").update({ phone }).eq("id", client.userId) as never);
     const res = await Promise.all(ops);
     setBusy(false);
-    if (res.some((r) => r.error)) return toast.error("Não foi possível salvar.");
+    if (res.some((r) => r.error)) { toast.error("Não foi possível salvar."); return; }
     toast.success("Cliente atualizada.");
     onSaved();
   }
