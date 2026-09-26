@@ -34,6 +34,16 @@ export function useAppointments() {
 
 function Dashboard() {
   const { data, isLoading } = useAppointments();
+  const { data: me } = useQuery({
+    queryKey: ["my-name"],
+    queryFn: async () => {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) return "";
+      const { data: p } = await supabase.from("profiles").select("full_name").eq("id", u.user.id).maybeSingle();
+      return p?.full_name || (u.user.user_metadata?.["full_name"] as string) || "";
+    },
+  });
+  const firstName = (me ?? "").trim().split(/\s+/)[0] ?? "";
   const now = Date.now();
   const upcoming = (data ?? []).filter(
     (a) => a.status !== "cancelled" && new Date(a.starts_at).getTime() >= now,
@@ -48,7 +58,9 @@ function Dashboard() {
     <div className="space-y-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="font-display text-4xl">Olá, bem-vinda</h1>
+          <h1 className="font-display text-4xl">
+            Olá, bem-vindo(a){firstName ? `, ${firstName}` : ""}
+          </h1>
           <p className="mt-1 text-muted-foreground">Sua agenda de beleza em um só lugar.</p>
         </div>
         <Button asChild>
