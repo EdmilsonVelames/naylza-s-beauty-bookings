@@ -64,6 +64,13 @@
       "when": 1790380595684,
       "tag": "0008_professional_accounts",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1790448063312,
+      "tag": "0009_staff_booking_clients_commissions",
+      "breakpoints": true
     }
   ]
 }
