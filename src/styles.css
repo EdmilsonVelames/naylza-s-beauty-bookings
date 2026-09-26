@@ -147,3 +147,7 @@
 @utility bg-soft {
   background-image: var(--gradient-soft);
 }
+
+#lovable-badge {
+  display: none !important;
+}
