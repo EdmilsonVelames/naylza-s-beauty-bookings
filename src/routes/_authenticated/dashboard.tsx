@@ -40,7 +40,7 @@ function Dashboard() {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) return "";
       const { data: p } = await supabase.from("profiles").select("full_name").eq("id", u.user.id).maybeSingle();
-      return p?.full_name || (u.user.user_metadata?.full_name as string) || "";
+      return p?.full_name || (u.user.user_metadata?.["full_name"] as string) || "";
     },
   });
   const firstName = (me ?? "").trim().split(/\s+/)[0] ?? "";
