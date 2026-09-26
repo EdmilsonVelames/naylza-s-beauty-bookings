@@ -51,6 +51,23 @@ function AuthPage() {
     navigate({ to: "/dashboard", replace: true });
   }
 
+  async function handleForgot() {
+    if (!email) {
+      toast.error("Digite seu e-mail no campo acima.");
+      return;
+    }
+    setLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setLoading(false);
+    if (error) {
+      toast.error("Não foi possível enviar o e-mail.");
+      return;
+    }
+    toast.success("Enviamos um link para criar uma nova senha no seu e-mail.");
+  }
+
   async function handleSignUp() {
     setLoading(true);
     const { error } = await supabase.auth.signUp({
@@ -146,6 +163,14 @@ function AuthPage() {
             >
               Criar conta
             </Button>
+            <button
+              type="button"
+              onClick={handleForgot}
+              disabled={loading}
+              className="w-full text-center text-sm text-primary underline-offset-4 hover:underline"
+            >
+              Esqueci minha senha
+            </button>
           </div>
         </div>
       </div>

@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarDays, Home, Scissors, Sparkles, User2, Settings, Wallet } from "lucide-react";
+import { CalendarDays, Home, Scissors, Sparkles, User2, Settings, Wallet, Users } from "lucide-react";
 import type { ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { SALON_NAME } from "@/lib/salon";
@@ -46,6 +46,12 @@ export function useMyProfessional() {
   });
 }
 
+export function useIsStaff() {
+  const { data: isAdmin, isLoading: a } = useIsAdmin();
+  const { data: myPro, isLoading: b } = useMyProfessional();
+  return { isAdmin: Boolean(isAdmin), myPro: myPro ?? null, isStaff: Boolean(isAdmin || myPro), isLoading: a || b };
+}
+
 export function AppShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -80,6 +86,21 @@ export function AppShell({ children }: { children: ReactNode }) {
                 {l.label}
               </Link>
             ))}
+            {!isAdmin && myPro ? (
+              <Link to="/admin/schedule" activeProps={{ className: "bg-secondary text-secondary-foreground" }} className="rounded-full px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-secondary/70">
+                Minha agenda
+              </Link>
+            ) : null}
+            {isAdmin || myPro ? (
+              <>
+                <Link to="/admin/clientes" activeProps={{ className: "bg-secondary text-secondary-foreground" }} className="rounded-full px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-secondary/70">
+                  Clientes
+                </Link>
+                <Link to="/admin/comissoes" activeProps={{ className: "bg-secondary text-secondary-foreground" }} className="rounded-full px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-secondary/70">
+                  Comissões
+                </Link>
+              </>
+            ) : null}
             {isAdmin ? (
               <>
                 <Link
@@ -137,6 +158,12 @@ export function AppShell({ children }: { children: ReactNode }) {
               {l.label}
             </Link>
           ))}
+          {isAdmin || myPro ? (
+            <Link to="/admin/clientes" activeProps={{ className: "text-primary" }} className="flex flex-col items-center gap-1 px-3 py-1 text-[11px] text-muted-foreground">
+              <Users className="size-5" />
+              Clientes
+            </Link>
+          ) : null}
           {isAdmin ? (
             <>
               <Link

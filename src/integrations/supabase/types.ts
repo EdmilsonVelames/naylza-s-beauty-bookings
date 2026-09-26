@@ -17,6 +17,9 @@ export type Database = {
       appointments: {
         Row: {
           created_at: string
+          created_by: string | null
+          guest_name: string
+          guest_phone: string
           id: string
           paid_cents: number
           payment_method: string
@@ -29,6 +32,9 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          created_by?: string | null
+          guest_name?: string
+          guest_phone?: string
           id?: string
           paid_cents?: number
           payment_method?: string
@@ -41,6 +47,9 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          created_by?: string | null
+          guest_name?: string
+          guest_phone?: string
           id?: string
           paid_cents?: number
           payment_method?: string
@@ -96,6 +105,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      client_notes: {
+        Row: {
+          client_key: string
+          notes: string
+          phone: string
+          updated_at: string
+        }
+        Insert: {
+          client_key: string
+          notes?: string
+          phone?: string
+          updated_at?: string
+        }
+        Update: {
+          client_key?: string
+          notes?: string
+          phone?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       payments: {
         Row: {
@@ -153,6 +183,7 @@ export type Database = {
       professionals: {
         Row: {
           active: boolean
+          commission_percent: number
           id: string
           name: string
           specialty: string
@@ -160,6 +191,7 @@ export type Database = {
         }
         Insert: {
           active?: boolean
+          commission_percent?: number
           id?: string
           name: string
           specialty?: string
@@ -167,6 +199,7 @@ export type Database = {
         }
         Update: {
           active?: boolean
+          commission_percent?: number
           id?: string
           name?: string
           specialty?: string
@@ -354,6 +387,7 @@ export type Database = {
         Args: { _client: string; _user_id: string }
         Returns: boolean
       }
+      is_staff: { Args: { _user_id: string }; Returns: boolean }
       professional_id_of: { Args: { _user_id: string }; Returns: string }
       register_manual_payment: {
         Args: {
