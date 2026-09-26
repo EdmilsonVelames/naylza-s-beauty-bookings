@@ -330,3 +330,88 @@ function ConfirmedList({ professionals }: { professionals: { id: string; name: s
     </section>
   );
 }
+
+const MANUAL_METHODS: Record<string, string> = {
+  pix_salao: "Pix direto",
+  dinheiro: "Dinheiro",
+  maquininha_credito: "Maquininha crédito",
+  maquininha_debito: "Maquininha débito",
+};
+
+export function PendingDeposits() {
+  const qc = useQueryClient();
+  const [method, setMethod] = useState<Record<string, string>>({});
+  const [busyId, setBusyId] = useState("");
+  const { data = [] } = useQuery({
+    queryKey: ["admin-pending"],
+    refetchInterval: 30_000,
+    queryFn: async () => {
+      const [appts, profs] = await Promise.all([
+        supabase
+          .from("appointments")
+          .select("id, user_id, starts_at, total_cents, guest_name, services(name), professionals(name)")
+          .eq("status", "pending")
+          .gte("starts_at", new Date().toISOString())
+          .order("starts_at"),
+        supabase.from("profiles").select("id, full_name, phone, email"),
+      ]);
+      if (appts.error) throw appts.error;
+      const byId = new Map((profs.data ?? []).map((p) => [p.id, p]));
+      return (appts.data ?? []).map((a) => ({ ...a, client: byId.get(a.user_id) }));
+    },
+  });
+
+  async function confirm(id: string) {
+    setBusyId(id);
+    const { error } = await supabase.rpc("confirm_deposit_manual", {
+      _appointment_id: id,
+      _method: method[id] ?? "pix_salao",
+    });
+    setBusyId("");
+    if (error) {
+      toast.error("Não foi possível confirmar.");
+      return;
+    }
+    toast.success("Sinal recebido — agendamento confirmado.");
+    qc.invalidateQueries();
+  }
+
+  if (!data.length) return null;
+  return (
+    <section className="space-y-3">
+      <div>
+        <h2 className="font-display text-2xl">Aguardando sinal</h2>
+        <p className="text-sm text-muted-foreground">
+          Recebeu os 50% direto (Pix, dinheiro ou maquininha)? Confirme aqui para garantir o horário.
+        </p>
+      </div>
+      <ul className="space-y-2">
+        {data.map((a) => (
+          <li key={a.id} className="surface-card flex flex-wrap items-center gap-3 p-3">
+            <div className="min-w-0 flex-1">
+              <p className="font-medium">
+                {a.services?.name} <span className="text-muted-foreground">· {a.professionals?.name}</span>
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {new Date(a.starts_at).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })} ·{" "}
+                {a.guest_name || a.client?.full_name || a.client?.email || "Cliente"} · Total {formatBRL(a.total_cents)}
+              </p>
+            </div>
+            <select
+              className="rounded-md border border-border bg-card px-2 py-1.5 text-sm"
+              value={method[a.id] ?? "pix_salao"}
+              onChange={(e) => setMethod({ ...method, [a.id]: e.target.value })}
+            >
+              {Object.entries(MANUAL_METHODS).map(([k, v]) => (
+                <option key={k} value={k}>{v}</option>
+              ))}
+            </select>
+            <Button size="sm" disabled={busyId === a.id} onClick={() => confirm(a.id)}>
+              Confirmar sinal recebido
+            </Button>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
