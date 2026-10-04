@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PasswordInput } from "@/components/PasswordInput";
 
 export const Route = createFileRoute("/_authenticated/profile")({
   head: () => ({
@@ -143,13 +144,12 @@ function ChangePassword() {
       <h2 className="font-display text-2xl">Trocar senha</h2>
       <div className="space-y-1.5">
         <Label htmlFor="new-pwd">Nova senha</Label>
-        <Input id="new-pwd" type="password" value={pwd} onChange={(e) => setPwd(e.target.value)} />
+        <PasswordInput id="new-pwd" value={pwd} onChange={(e) => setPwd(e.target.value)} />
       </div>
       <div className="space-y-1.5">
         <Label htmlFor="conf-pwd">Confirmar nova senha</Label>
-        <Input
+        <PasswordInput
           id="conf-pwd"
-          type="password"
           value={confirm}
           onChange={(e) => setConfirm(e.target.value)}
         />

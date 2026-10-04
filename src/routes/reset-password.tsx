@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PasswordInput } from "@/components/PasswordInput";
 
 export const Route = createFileRoute("/reset-password")({
   head: () => ({
@@ -46,11 +47,11 @@ function ResetPassword() {
         <h1 className="font-display text-3xl">Criar nova senha</h1>
         <div className="space-y-1.5">
           <Label htmlFor="p1">Nova senha</Label>
-          <Input id="p1" type="password" value={pwd} onChange={(e) => setPwd(e.target.value)} />
+          <PasswordInput id="p1" value={pwd} onChange={(e) => setPwd(e.target.value)} />
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="p2">Confirmar senha</Label>
-          <Input id="p2" type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} />
+          <PasswordInput id="p2" value={confirm} onChange={(e) => setConfirm(e.target.value)} />
         </div>
         <Button className="w-full" disabled={busy} onClick={save}>
           {busy ? "Salvando…" : "Salvar nova senha"}

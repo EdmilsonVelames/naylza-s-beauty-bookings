@@ -202,6 +202,7 @@ function Professionals() {
                 <p className="font-medium">{p.name}</p>
                 <p className="text-sm text-muted-foreground">{p.specialty}</p>
                 <AccountLink professionalId={p.id} userId={p.user_id} onSaved={refresh} />
+                <ServicePicker professionalId={p.id} />
               </div>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Switch checked={p.active} onCheckedChange={(v) => toggle(p.id, v)} />
@@ -643,5 +644,72 @@ function AccountLink({
         ))}
       </select>
     </label>
+  );
+}
+
+function ServicePicker({ professionalId }: { professionalId: string }) {
+  const queryClient = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const { data: services } = useQuery({
+    queryKey: ["services-all-active"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("services")
+        .select("id, name")
+        .eq("active", true)
+        .order("name");
+      if (error) throw error;
+      return data;
+    },
+  });
+  const { data: links } = useQuery({
+    queryKey: ["professional-services"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("professional_services").select("*");
+      if (error) throw error;
+      return data;
+    },
+  });
+  const mine = new Set(
+    (links ?? []).filter((l) => l.professional_id === professionalId).map((l) => l.service_id),
+  );
+
+  async function toggle(serviceId: string, on: boolean) {
+    const { error } = on
+      ? await supabase
+          .from("professional_services")
+          .insert({ professional_id: professionalId, service_id: serviceId })
+      : await supabase
+          .from("professional_services")
+          .delete()
+          .eq("professional_id", professionalId)
+          .eq("service_id", serviceId);
+    if (error) {
+      toast.error("Não foi possível salvar.");
+      return;
+    }
+    queryClient.invalidateQueries({ queryKey: ["professional-services"] });
+  }
+
+  return (
+    <div className="mt-2 text-xs text-muted-foreground">
+      <button type="button" className="underline" onClick={() => setOpen((v) => !v)}>
+        Procedimentos que faz: {mine.size === 0 ? "todos (nenhum selecionado)" : mine.size}
+      </button>
+      {open ? (
+        <div className="mt-2 grid gap-1 sm:grid-cols-2">
+          {(services ?? []).map((s) => (
+            <label key={s.id} className="flex items-center gap-2 text-sm text-foreground">
+              <input
+                type="checkbox"
+                checked={mine.has(s.id)}
+                onChange={(e) => toggle(s.id, e.target.checked)}
+              />
+              {s.name}
+            </label>
+          ))}
+        </div>
+      ) : null}
+    </div>
   );
 }
