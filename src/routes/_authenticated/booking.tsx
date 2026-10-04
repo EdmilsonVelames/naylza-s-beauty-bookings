@@ -119,6 +119,15 @@ function Booking() {
     },
   });
 
+  const { data: proServices } = useQuery({
+    queryKey: ["professional-services"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("professional_services").select("*");
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const { data: hours } = useSalonSettings();
   const slotMinutes = hours?.slot_minutes ?? 30;
 
@@ -332,7 +341,12 @@ function Booking() {
                 .map((s) => (
                   <button
                     key={s.id}
-                    onClick={() => setServiceId(s.id)}
+                    onClick={() => {
+                      setServiceId(s.id);
+                      setTime("");
+                      const links = (proServices ?? []).filter((l) => l.professional_id === professionalId);
+                      if (links.length && !links.some((l) => l.service_id === s.id)) setProfessionalId("");
+                    }}
                     className={cn(
                       "surface-card p-4 text-left transition-all hover:shadow-[var(--shadow-lift)]",
                       serviceId === s.id && "ring-2 ring-primary",
@@ -366,6 +380,11 @@ function Booking() {
           <SelectContent>
             {(professionals ?? [])
               .filter((p) => isAdmin || !myPro || p.id === myPro.id)
+              .filter((p) => {
+                if (!serviceId) return true;
+                const mine = (proServices ?? []).filter((l) => l.professional_id === p.id);
+                return mine.length === 0 || mine.some((l) => l.service_id === serviceId);
+              })
               .map((p) => (
               <SelectItem key={p.id} value={p.id}>
                 {p.name} — {p.specialty}
