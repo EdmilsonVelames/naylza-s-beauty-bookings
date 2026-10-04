@@ -27,8 +27,8 @@ export const Route = createFileRoute("/api/public/whatsapp/reminders")({
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const now = Date.now();
-        const from = new Date(now + 90 * 60_000).toISOString();
-        const to = new Date(now + 150 * 60_000).toISOString();
+        const from = new Date(now + 105 * 60_000).toISOString();
+        const to = new Date(now + 135 * 60_000).toISOString();
 
         const { data: due, error } = await supabaseAdmin
           .from("appointments")

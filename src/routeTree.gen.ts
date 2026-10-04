@@ -25,6 +25,7 @@ import { Route as AuthenticatedAdminSalonRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAdminScheduleRouteImport } from './routes/_authenticated/admin.schedule'
 import { Route as AuthenticatedAdminServicesRouteImport } from './routes/_authenticated/admin.services'
 import { Route as ApiPublicMercadopagoWebhookRouteImport } from './routes/api/public/mercadopago.webhook'
+import { Route as ApiPublicWhatsappRemindersRouteImport } from './routes/api/public/whatsapp.reminders'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -112,6 +113,12 @@ const ApiPublicMercadopagoWebhookRoute =
     path: '/api/public/mercadopago/webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicWhatsappRemindersRoute =
+  ApiPublicWhatsappRemindersRouteImport.update({
+    id: '/api/public/whatsapp/reminders',
+    path: '/api/public/whatsapp/reminders',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -129,6 +136,7 @@ export interface FileRoutesByFullPath {
   '/admin/schedule': typeof AuthenticatedAdminScheduleRoute
   '/admin/services': typeof AuthenticatedAdminServicesRoute
   '/api/public/mercadopago/webhook': typeof ApiPublicMercadopagoWebhookRoute
+  '/api/public/whatsapp/reminders': typeof ApiPublicWhatsappRemindersRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -146,6 +154,7 @@ export interface FileRoutesByTo {
   '/admin/schedule': typeof AuthenticatedAdminScheduleRoute
   '/admin/services': typeof AuthenticatedAdminServicesRoute
   '/api/public/mercadopago/webhook': typeof ApiPublicMercadopagoWebhookRoute
+  '/api/public/whatsapp/reminders': typeof ApiPublicWhatsappRemindersRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -165,6 +174,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/schedule': typeof AuthenticatedAdminScheduleRoute
   '/_authenticated/admin/services': typeof AuthenticatedAdminServicesRoute
   '/api/public/mercadopago/webhook': typeof ApiPublicMercadopagoWebhookRoute
+  '/api/public/whatsapp/reminders': typeof ApiPublicWhatsappRemindersRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -184,6 +194,7 @@ export interface FileRouteTypes {
     | '/admin/schedule'
     | '/admin/services'
     | '/api/public/mercadopago/webhook'
+    | '/api/public/whatsapp/reminders'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -201,6 +212,7 @@ export interface FileRouteTypes {
     | '/admin/schedule'
     | '/admin/services'
     | '/api/public/mercadopago/webhook'
+    | '/api/public/whatsapp/reminders'
   id:
     | '__root__'
     | '/'
@@ -219,6 +231,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/schedule'
     | '/_authenticated/admin/services'
     | '/api/public/mercadopago/webhook'
+    | '/api/public/whatsapp/reminders'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -226,6 +239,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   ResetPasswordRoute: typeof ResetPasswordRoute
   ApiPublicMercadopagoWebhookRoute: typeof ApiPublicMercadopagoWebhookRoute
+  ApiPublicWhatsappRemindersRoute: typeof ApiPublicWhatsappRemindersRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -342,6 +356,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicMercadopagoWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/whatsapp/reminders': {
+      id: '/api/public/whatsapp/reminders'
+      path: '/api/public/whatsapp/reminders'
+      fullPath: '/api/public/whatsapp/reminders'
+      preLoaderRoute: typeof ApiPublicWhatsappRemindersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -383,6 +404,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   ResetPasswordRoute: ResetPasswordRoute,
   ApiPublicMercadopagoWebhookRoute: ApiPublicMercadopagoWebhookRoute,
+  ApiPublicWhatsappRemindersRoute: ApiPublicWhatsappRemindersRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
