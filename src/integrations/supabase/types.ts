@@ -24,6 +24,9 @@ export type Database = {
           paid_cents: number
           payment_method: string
           professional_id: string
+          reminder_error: string | null
+          reminder_message_id: string | null
+          reminder_sent_at: string | null
           service_id: string
           starts_at: string
           status: string
@@ -39,6 +42,9 @@ export type Database = {
           paid_cents?: number
           payment_method?: string
           professional_id: string
+          reminder_error?: string | null
+          reminder_message_id?: string | null
+          reminder_sent_at?: string | null
           service_id: string
           starts_at: string
           status?: string
@@ -54,6 +60,9 @@ export type Database = {
           paid_cents?: number
           payment_method?: string
           professional_id?: string
+          reminder_error?: string | null
+          reminder_message_id?: string | null
+          reminder_sent_at?: string | null
           service_id?: string
           starts_at?: string
           status?: string
