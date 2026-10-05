@@ -413,7 +413,7 @@ function CategoryManager() {
                 className="h-16 w-[86px] rounded-md"
                 onUploaded={async (p) => {
                   const { error } = await supabase.from("service_categories").update({ image_url: p }).eq("id", c.id);
-                  if (error) return toast.error("Não foi possível salvar a foto.");
+                  if (error) { toast.error("Não foi possível salvar a foto."); return; }
                   toast.success("Foto salva.");
                   refresh();
                 }}
@@ -511,7 +511,7 @@ function FormatManager({ serviceId }: { serviceId: string }) {
 
   async function update(id: string, patch: { name?: string; image_url?: string }) {
     const { error } = await supabase.from("service_formats").update(patch).eq("id", id);
-    if (error) return toast.error("Não foi possível salvar.");
+    if (error) { toast.error("Não foi possível salvar."); return; }
     toast.success("Formato salvo.");
     setEdits((e) => {
       const n = { ...e };
@@ -521,17 +521,17 @@ function FormatManager({ serviceId }: { serviceId: string }) {
     refresh();
   }
   async function add() {
-    if (!newName.trim()) return toast.error("Informe o nome do formato.");
+    if (!newName.trim()) { toast.error("Informe o nome do formato."); return; }
     const { error } = await supabase
       .from("service_formats")
       .insert({ service_id: serviceId, name: newName.trim(), position: list.length + 1 });
-    if (error) return toast.error("Não foi possível adicionar.");
+    if (error) { toast.error("Não foi possível adicionar."); return; }
     setNewName("");
     refresh();
   }
   async function remove(id: string) {
     const { error } = await supabase.from("service_formats").delete().eq("id", id);
-    if (error) return toast.error("Não foi possível remover.");
+    if (error) { toast.error("Não foi possível remover."); return; }
     refresh();
   }
 
