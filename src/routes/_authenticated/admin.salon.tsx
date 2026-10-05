@@ -12,6 +12,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useIsAdmin } from "@/components/AppShell";
 import { useSalonSettings, depositFor } from "@/hooks/useSalonSettings";
 import { buildSlots, formatBRL, minutesOf } from "@/lib/salon";
+import { LOGO_ICONS } from "@/lib/logo-icons";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/admin/salon")({
   head: () => ({
@@ -61,6 +63,7 @@ function AdminSalon() {
           <TabsTrigger value="rooms">Salas</TabsTrigger>
           <TabsTrigger value="hours">Horários</TabsTrigger>
           <TabsTrigger value="values">Valores</TabsTrigger>
+          <TabsTrigger value="look">Aparência</TabsTrigger>
         </TabsList>
         <TabsContent value="pros" className="mt-6">
           <Professionals />
@@ -73,6 +76,9 @@ function AdminSalon() {
         </TabsContent>
         <TabsContent value="values" className="mt-6">
           <Values />
+        </TabsContent>
+        <TabsContent value="look" className="mt-6">
+          <Look />
         </TabsContent>
       </Tabs>
     </div>
@@ -754,5 +760,47 @@ function ServicePicker({ professionalId }: { professionalId: string }) {
         </div>
       ) : null}
     </div>
+  );
+}
+
+function Look() {
+  const queryClient = useQueryClient();
+  const { data } = useSalonSettings();
+  const current = data?.logo_icon ?? "scissors";
+  async function pick(key: string) {
+    const { error } = await supabase.from("salon_settings").upsert({ id: true, logo_icon: key });
+    if (error) {
+      toast.error("Não foi possível salvar.");
+      return;
+    }
+    toast.success("Ícone trocado.");
+    queryClient.invalidateQueries({ queryKey: ["salon-settings"] });
+  }
+  return (
+    <section className="surface-card space-y-4 p-5">
+      <div>
+        <h2 className="font-display text-2xl">Ícone do salão</h2>
+        <p className="text-sm text-muted-foreground">
+          Aparece ao lado do nome do salão na tela de entrada e no topo do app.
+        </p>
+      </div>
+      <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
+        {Object.entries(LOGO_ICONS).map(([key, { label, Icon }]) => (
+          <button
+            key={key}
+            onClick={() => pick(key)}
+            className={cn(
+              "flex flex-col items-center gap-2 rounded-xl border border-border p-3 text-xs transition-colors hover:bg-secondary",
+              current === key && "ring-2 ring-primary",
+            )}
+          >
+            <span className="flex size-10 items-center justify-center rounded-full bg-hero text-primary-foreground">
+              <Icon className="size-5" />
+            </span>
+            {label}
+          </button>
+        ))}
+      </div>
+    </section>
   );
 }

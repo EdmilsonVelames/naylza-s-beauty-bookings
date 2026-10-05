@@ -92,6 +92,13 @@
       "when": 1791162485795,
       "tag": "0012_migration",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1791220125612,
+      "tag": "0013_hidden_categories_logo_icon",
+      "breakpoints": true
     }
   ]
 }

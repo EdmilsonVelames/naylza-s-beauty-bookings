@@ -5,6 +5,7 @@ import { useState, type ReactNode } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
 import { SALON_NAME } from "@/lib/salon";
+import { SalonLogoIcon } from "@/lib/logo-icons";
 
 const links = [
   { to: "/dashboard", label: "Início", icon: Home },
@@ -87,7 +88,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3">
           <Link to="/dashboard" className="flex items-center gap-2">
             <span className="flex size-9 items-center justify-center rounded-full bg-hero text-primary-foreground">
-              <Scissors className="size-4" />
+              <SalonLogoIcon className="size-4" />
             </span>
             <span className="font-display text-lg leading-none font-semibold">{SALON_NAME}</span>
           </Link>
