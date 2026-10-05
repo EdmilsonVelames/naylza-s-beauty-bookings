@@ -99,6 +99,13 @@
       "when": 1791220125612,
       "tag": "0013_hidden_categories_logo_icon",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1791227740383,
+      "tag": "0014_logo_image_pro_hours_days_off",
+      "breakpoints": true
     }
   ]
 }
