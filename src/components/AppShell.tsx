@@ -87,7 +87,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <header className="sticky top-0 z-30 border-b border-border/70 bg-background/85 backdrop-blur">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3">
           <Link to="/dashboard" className="flex items-center gap-2">
-            <span className="flex size-9 items-center justify-center rounded-full bg-hero text-primary-foreground">
+            <span className="flex size-9 items-center justify-center overflow-hidden rounded-full bg-hero text-primary-foreground">
               <SalonLogoIcon className="size-4" />
             </span>
             <span className="font-display text-lg leading-none font-semibold">{SALON_NAME}</span>
