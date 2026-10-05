@@ -655,8 +655,20 @@ function ServicePicker({ professionalId }: { professionalId: string }) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("services")
-        .select("id, name")
+        .select("id, name, category_id")
         .eq("active", true)
+        .order("name");
+      if (error) throw error;
+      return data;
+    },
+  });
+  const { data: cats } = useQuery({
+    queryKey: ["service-categories"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("service_categories")
+        .select("*")
+        .order("position")
         .order("name");
       if (error) throw error;
       return data;
@@ -674,16 +686,30 @@ function ServicePicker({ professionalId }: { professionalId: string }) {
     (links ?? []).filter((l) => l.professional_id === professionalId).map((l) => l.service_id),
   );
 
-  async function toggle(serviceId: string, on: boolean) {
+  const groups = [
+    ...(cats ?? []).map((c) => ({ id: c.id, name: c.name })),
+    { id: "none", name: "Outros" },
+  ]
+    .map((g) => ({
+      ...g,
+      items: (services ?? []).filter((s) =>
+        g.id === "none" ? !s.category_id : s.category_id === g.id,
+      ),
+    }))
+    .filter((g) => g.items.length > 0);
+
+  async function setMany(serviceIds: string[], on: boolean) {
+    const ids = serviceIds.filter((id) => mine.has(id) !== on);
+    if (!ids.length) return;
     const { error } = on
       ? await supabase
           .from("professional_services")
-          .insert({ professional_id: professionalId, service_id: serviceId })
+          .insert(ids.map((service_id) => ({ professional_id: professionalId, service_id })))
       : await supabase
           .from("professional_services")
           .delete()
           .eq("professional_id", professionalId)
-          .eq("service_id", serviceId);
+          .in("service_id", ids);
     if (error) {
       toast.error("Não foi possível salvar.");
       return;
@@ -697,17 +723,34 @@ function ServicePicker({ professionalId }: { professionalId: string }) {
         Procedimentos que faz: {mine.size === 0 ? "todos (nenhum selecionado)" : mine.size}
       </button>
       {open ? (
-        <div className="mt-2 grid gap-1 sm:grid-cols-2">
-          {(services ?? []).map((s) => (
-            <label key={s.id} className="flex items-center gap-2 text-sm text-foreground">
-              <input
-                type="checkbox"
-                checked={mine.has(s.id)}
-                onChange={(e) => toggle(s.id, e.target.checked)}
-              />
-              {s.name}
-            </label>
-          ))}
+        <div className="mt-3 space-y-3">
+          {groups.map((g) => {
+            const all = g.items.every((s) => mine.has(s.id));
+            return (
+              <div key={g.id} className="rounded-lg border border-border p-3">
+                <label className="flex items-center gap-2 text-sm font-medium text-foreground">
+                  <input
+                    type="checkbox"
+                    checked={all}
+                    onChange={(e) => setMany(g.items.map((s) => s.id), e.target.checked)}
+                  />
+                  {g.name} — selecionar todos
+                </label>
+                <div className="mt-2 grid gap-1 pl-5 sm:grid-cols-2">
+                  {g.items.map((s) => (
+                    <label key={s.id} className="flex items-center gap-2 text-sm text-foreground">
+                      <input
+                        type="checkbox"
+                        checked={mine.has(s.id)}
+                        onChange={(e) => setMany([s.id], e.target.checked)}
+                      />
+                      {s.name}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
         </div>
       ) : null}
     </div>
