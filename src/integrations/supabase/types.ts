@@ -304,6 +304,7 @@ export type Database = {
           close_time: string
           deposit_percent: number
           id: boolean
+          logo_icon: string
           open_time: string
           slot_minutes: number
           updated_at: string
@@ -314,6 +315,7 @@ export type Database = {
           close_time?: string
           deposit_percent?: number
           id?: boolean
+          logo_icon?: string
           open_time?: string
           slot_minutes?: number
           updated_at?: string
@@ -324,6 +326,7 @@ export type Database = {
           close_time?: string
           deposit_percent?: number
           id?: boolean
+          logo_icon?: string
           open_time?: string
           slot_minutes?: number
           updated_at?: string
@@ -333,6 +336,7 @@ export type Database = {
       service_categories: {
         Row: {
           created_at: string
+          hidden: boolean
           id: string
           image_url: string
           name: string
@@ -340,6 +344,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          hidden?: boolean
           id?: string
           image_url?: string
           name: string
@@ -347,6 +352,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          hidden?: boolean
           id?: string
           image_url?: string
           name?: string
