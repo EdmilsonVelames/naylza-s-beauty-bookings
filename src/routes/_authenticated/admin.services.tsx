@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
   DialogContent,
@@ -85,7 +86,7 @@ function AdminServices() {
       return data;
     },
   });
-  const CATEGORIES = (cats ?? []).map((c) => ({ value: c.id, label: c.name }));
+  const CATEGORIES = (cats ?? []).map((c) => ({ value: c.id, label: c.name, hidden: c.hidden }));
 
   async function save() {
     const payload = {
@@ -155,7 +156,10 @@ function AdminServices() {
         return (
           <section key={cat.value} className="space-y-3">
             <div className="flex items-center justify-between">
-              <h2 className="font-display text-2xl">{cat.label}</h2>
+              <h2 className="font-display text-2xl">
+                {cat.label}
+                {cat.hidden ? <span className="ml-2 align-middle text-sm text-muted-foreground">(oculta)</span> : null}
+              </h2>
               <Button
                 size="sm"
                 variant="outline"
@@ -402,6 +406,18 @@ function CategoryManager() {
                 Salvar
               </Button>
             )}
+            <label className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Switch
+                checked={!c.hidden}
+                onCheckedChange={async (v) => {
+                  const { error } = await supabase.from("service_categories").update({ hidden: !v }).eq("id", c.id);
+                  if (error) { toast.error("Não foi possível salvar."); return; }
+                  toast.success(v ? "Categoria visível para as clientes." : "Categoria oculta. Os serviços dela não aparecem no agendamento.");
+                  refresh();
+                }}
+              />
+              {c.hidden ? "Oculta" : "Visível"}
+            </label>
             <Button size="icon" variant="ghost" aria-label="Remover" onClick={() => remove(c.id)}>
               <Trash2 className="size-4" />
             </Button>
