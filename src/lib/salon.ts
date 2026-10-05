@@ -121,3 +121,27 @@ export const STATUS_LABEL: Record<string, string> = {
   paid: "Totalmente pago",
   cancelled: "Cancelado",
 };
+
+type ProHours = {
+  open_time?: string | null;
+  close_time?: string | null;
+  break_start?: string | null;
+  break_end?: string | null;
+};
+
+/** Working hours for a professional: her own when set, otherwise the salon's. */
+export function hoursFor(pro: ProHours | null | undefined, salon: SalonHours): SalonHours {
+  const own = Boolean(pro?.open_time && pro?.close_time);
+  return {
+    ...salon,
+    open_time: own ? pro!.open_time! : salon.open_time,
+    close_time: own ? pro!.close_time! : salon.close_time,
+    break_start: own ? (pro!.break_start ?? "") : salon.break_start,
+    break_end: own ? (pro!.break_end ?? "") : salon.break_end,
+  };
+}
+
+/** yyyy-mm-dd in local time. */
+export function dayKey(d: Date) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}

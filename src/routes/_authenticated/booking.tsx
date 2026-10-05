@@ -15,7 +15,9 @@ import {
   PENDING_HOLD_MIN,
   buildSlots,
   formatBRL,
+  dayKey,
   formatDayLabel,
+  hoursFor,
   minutesOf,
   overlaps,
   sameDayRange,
@@ -31,6 +33,7 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { SalonImage } from "@/lib/images";
+import { useDaysOff } from "@/components/ScheduleTools";
 
 export const Route = createFileRoute("/_authenticated/booking")({
   head: () => ({
@@ -190,18 +193,28 @@ function Booking() {
     },
   });
 
+  const dayHours = useMemo(
+    () =>
+      hoursFor(
+        professionals?.find((p) => p.id === professionalId),
+        {
+          open_time: hours?.open_time ?? "09:00",
+          close_time: hours?.close_time ?? "19:00",
+          slot_minutes: slotMinutes,
+          break_start: hours?.break_start ?? "",
+          break_end: hours?.break_end ?? "",
+        },
+      ),
+    [hours, slotMinutes, professionals, professionalId],
+  );
   const slots = useMemo(
     () =>
-      buildSlots({
-        open_time: hours?.open_time ?? "09:00",
-        close_time: hours?.close_time ?? "19:00",
-        slot_minutes: slotMinutes,
-        break_start: hours?.break_start ?? "",
-        break_end: hours?.break_end ?? "",
-      }),
-    [hours, slotMinutes],
+      buildSlots(dayHours),
+    [dayHours],
   );
-  const closeMinutes = minutesOf(hours?.close_time ?? "19:00");
+  const closeMinutes = minutesOf(dayHours.close_time);
+  const { data: daysOff } = useDaysOff(professionalId);
+  const isDayOff = daysOff?.has(dayKey(day)) ?? false;
 
   const service = services?.find((s) => s.id === serviceId);
   const professional = professionals?.find((p) => p.id === professionalId);
@@ -493,7 +506,7 @@ function Booking() {
                 const duration = service.duration_min;
                 const fitsInDay = minutesOf(h) + duration <= closeMinutes;
                 const taken = overlaps(ts, duration, busy ?? []);
-                const disabled = taken || ts < Date.now() || !fitsInDay;
+                const disabled = isDayOff || taken || ts < Date.now() || !fitsInDay;
                 return (
                   <button
                     key={h}
@@ -510,6 +523,11 @@ function Booking() {
                 );
               })}
             </div>
+            {isDayOff ? (
+              <p className="text-sm font-medium text-destructive">
+                {professional?.name} está de folga neste dia. Escolha outra data.
+              </p>
+            ) : null}
             <p className="text-xs text-muted-foreground">
               Só aparecem livres os horários com {service.duration_min} min completos para{" "}
               {service.name}.

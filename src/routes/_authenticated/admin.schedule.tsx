@@ -6,7 +6,8 @@ import { Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useIsAdmin, useMyProfessional } from "@/components/AppShell";
-import { buildSlots, formatBRL, formatDayLabel, sameDayRange, toIsoSlot } from "@/lib/salon";
+import { buildSlots, formatBRL, formatDayLabel, hoursFor, sameDayRange, toIsoSlot } from "@/lib/salon";
+import { DayOffToggle, MonthCalendar, ProHoursEditor } from "@/components/ScheduleTools";
 import { useSalonSettings, DEFAULT_HOURS } from "@/hooks/useSalonSettings";
 import { cn } from "@/lib/utils";
 
@@ -39,13 +40,6 @@ function AdminSchedule() {
   );
   const [day, setDay] = useState(days[0]!);
   const { data: hoursSettings } = useSalonSettings();
-  const slots = buildSlots({
-    open_time: hoursSettings?.open_time ?? DEFAULT_HOURS.open_time,
-    close_time: hoursSettings?.close_time ?? DEFAULT_HOURS.close_time,
-    slot_minutes: hoursSettings?.slot_minutes ?? DEFAULT_HOURS.slot_minutes,
-    break_start: hoursSettings?.break_start ?? DEFAULT_HOURS.break_start,
-    break_end: hoursSettings?.break_end ?? DEFAULT_HOURS.break_end,
-  });
   const [professionalId, setProfessionalId] = useState<string>("");
 
   const { data: allProfessionals } = useQuery({
@@ -61,6 +55,16 @@ function AdminSchedule() {
     ? allProfessionals
     : (allProfessionals ?? []).filter((p) => p.id === myPro?.id);
   const activeProfessional = professionalId || professionals?.[0]?.id || "";
+  const activePro = (professionals ?? []).find((p) => p.id === activeProfessional);
+  const slots = buildSlots(
+    hoursFor(activePro, {
+      open_time: hoursSettings?.open_time ?? DEFAULT_HOURS.open_time,
+      close_time: hoursSettings?.close_time ?? DEFAULT_HOURS.close_time,
+      slot_minutes: hoursSettings?.slot_minutes ?? DEFAULT_HOURS.slot_minutes,
+      break_start: hoursSettings?.break_start ?? DEFAULT_HOURS.break_start,
+      break_end: hoursSettings?.break_end ?? DEFAULT_HOURS.break_end,
+    }),
+  );
 
   const { data: dayData } = useQuery({
     queryKey: ["admin-day", activeProfessional, day.toDateString()],
@@ -152,20 +156,12 @@ function AdminSchedule() {
         ))}
       </div>
 
-      <div className="flex gap-2 overflow-x-auto pb-2">
-        {days.map((d) => (
-          <button
-            key={d.toISOString()}
-            onClick={() => setDay(d)}
-            className={cn(
-              "min-w-[92px] rounded-xl border border-border bg-card px-3 py-3 text-sm capitalize",
-              d.toDateString() === day.toDateString() &&
-                "bg-hero text-primary-foreground border-transparent",
-            )}
-          >
-            {formatDayLabel(d)}
-          </button>
-        ))}
+      {activePro ? <ProHoursEditor professional={activePro} /> : null}
+
+      <MonthCalendar professionalId={activeProfessional} day={day} onSelect={setDay} />
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="font-display text-xl capitalize">{formatDayLabel(day)}</p>
+        {activeProfessional ? <DayOffToggle professionalId={activeProfessional} day={day} /> : null}
       </div>
 
       <section className="space-y-3">

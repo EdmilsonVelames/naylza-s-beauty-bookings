@@ -192,6 +192,29 @@ export type Database = {
           },
         ]
       }
+      professional_days_off: {
+        Row: {
+          day: string
+          professional_id: string
+        }
+        Insert: {
+          day: string
+          professional_id: string
+        }
+        Update: {
+          day?: string
+          professional_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "professional_days_off_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "professionals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       professional_services: {
         Row: {
           professional_id: string
@@ -225,25 +248,37 @@ export type Database = {
       professionals: {
         Row: {
           active: boolean
+          break_end: string | null
+          break_start: string | null
+          close_time: string | null
           commission_percent: number
           id: string
           name: string
+          open_time: string | null
           specialty: string
           user_id: string | null
         }
         Insert: {
           active?: boolean
+          break_end?: string | null
+          break_start?: string | null
+          close_time?: string | null
           commission_percent?: number
           id?: string
           name: string
+          open_time?: string | null
           specialty?: string
           user_id?: string | null
         }
         Update: {
           active?: boolean
+          break_end?: string | null
+          break_start?: string | null
+          close_time?: string | null
           commission_percent?: number
           id?: string
           name?: string
+          open_time?: string | null
           specialty?: string
           user_id?: string | null
         }
@@ -305,6 +340,7 @@ export type Database = {
           deposit_percent: number
           id: boolean
           logo_icon: string
+          logo_image: string
           open_time: string
           slot_minutes: number
           updated_at: string
@@ -316,6 +352,7 @@ export type Database = {
           deposit_percent?: number
           id?: boolean
           logo_icon?: string
+          logo_image?: string
           open_time?: string
           slot_minutes?: number
           updated_at?: string
@@ -327,6 +364,7 @@ export type Database = {
           deposit_percent?: number
           id?: boolean
           logo_icon?: string
+          logo_image?: string
           open_time?: string
           slot_minutes?: number
           updated_at?: string
@@ -484,6 +522,16 @@ export type Database = {
           _amount_cents: number
           _appointment_id: string
           _method: string
+        }
+        Returns: undefined
+      }
+      set_professional_hours: {
+        Args: {
+          _bend: string
+          _bstart: string
+          _close: string
+          _open: string
+          _professional_id: string
         }
         Returns: undefined
       }

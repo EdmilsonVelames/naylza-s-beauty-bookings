@@ -7,6 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useIsStaff } from "@/components/AppShell";
+import { useServerFn } from "@tanstack/react-start";
+import { PasswordInput } from "@/components/PasswordInput";
+import { adminDeleteClient, adminUpdateClient } from "@/lib/clients.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/clientes")({
   head: () => ({
@@ -27,6 +30,7 @@ type Client = {
   userId: string | null;
   name: string;
   phone: string;
+  email: string;
   visits: number[];
   services: Record<string, number>;
 };
@@ -39,7 +43,7 @@ function frequencyLabel(visits: number[]) {
 }
 
 function Clientes() {
-  const { isStaff, isLoading } = useIsStaff();
+  const { isStaff, isAdmin, isLoading } = useIsStaff();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
 
@@ -67,6 +71,7 @@ function Clientes() {
         userId: p.id,
         name: p.full_name || p.email,
         phone: p.phone,
+        email: p.email,
         visits: [],
         services: {},
       });
@@ -76,7 +81,7 @@ function Clientes() {
       const key = guest ? `guest:${guest.toLowerCase()}` : a.user_id;
       let c = map.get(key);
       if (!c) {
-        c = { key, userId: null, name: guest, phone: a.guest_phone, visits: [], services: {} };
+        c = { key, userId: null, name: guest, phone: a.guest_phone, email: "", visits: [], services: {} };
         map.set(key, c);
       }
       if (guest && a.guest_phone) c.phone = a.guest_phone;
@@ -87,7 +92,7 @@ function Clientes() {
     }
     const q = search.toLowerCase();
     return [...map.values()]
-      .filter((c) => !q || c.name.toLowerCase().includes(q) || c.phone.includes(q))
+      .filter((c) => !q || c.name.toLowerCase().includes(q) || c.phone.includes(q) || c.email.toLowerCase().includes(q))
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [data, search]);
 
@@ -108,7 +113,7 @@ function Clientes() {
         <p className="mt-1 text-muted-foreground">Histórico, preferências e observações.</p>
       </div>
       <Input
-        placeholder="Buscar por nome ou telefone"
+        placeholder="Buscar por nome, telefone ou e-mail"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         className="sm:w-80"
@@ -119,6 +124,7 @@ function Clientes() {
             key={c.key}
             client={c}
             note={notesByKey.get(c.key)}
+            isAdmin={isAdmin}
             onSaved={() => queryClient.invalidateQueries({ queryKey: ["clientes"] })}
           />
         ))}
@@ -131,15 +137,21 @@ function Clientes() {
 function ClientCard({
   client,
   note,
+  isAdmin,
   onSaved,
 }: {
   client: Client;
+  isAdmin: boolean;
   note?: { phone: string; notes: string } | undefined;
   onSaved: () => void;
 }) {
   const [phone, setPhone] = useState(note?.phone || client.phone);
   const [notes, setNotes] = useState(note?.notes ?? "");
+  const [email, setEmail] = useState(client.email);
+  const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+  const updateClient = useServerFn(adminUpdateClient);
+  const deleteClient = useServerFn(adminDeleteClient);
   const last = client.visits.length ? Math.max(...client.visits) : null;
   const fav = Object.entries(client.services).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "—";
 
@@ -150,12 +162,45 @@ function ClientCard({
         .from("client_notes")
         .upsert({ client_key: client.key, phone, notes, updated_at: new Date().toISOString() }),
     ];
-    if (client.userId) ops.push(supabase.from("profiles").update({ phone }).eq("id", client.userId) as never);
+    if (client.userId && !isAdmin) ops.push(supabase.from("profiles").update({ phone }).eq("id", client.userId) as never);
     const res = await Promise.all(ops);
+    if (res.some((r) => r.error)) { setBusy(false); toast.error("Não foi possível salvar."); return; }
+    if (client.userId && isAdmin) {
+      if (password && password.length < 6) { setBusy(false); toast.error("A senha precisa ter pelo menos 6 caracteres."); return; }
+      try {
+        await updateClient({
+          data: {
+            userId: client.userId,
+            phone,
+            ...(email.trim() && email.trim() !== client.email ? { email: email.trim() } : {}),
+            ...(password ? { password } : {}),
+          },
+        });
+        setPassword("");
+      } catch (e) {
+        setBusy(false);
+        toast.error(e instanceof Error ? e.message : "Não foi possível salvar.");
+        return;
+      }
+    }
     setBusy(false);
-    if (res.some((r) => r.error)) { toast.error("Não foi possível salvar."); return; }
     toast.success("Cliente atualizada.");
     onSaved();
+  }
+
+  async function remove() {
+    if (!client.userId) return;
+    if (!window.confirm(`Excluir o cadastro de ${client.name}? Os agendamentos e pagamentos dela também serão apagados. Isso não pode ser desfeito.`)) return;
+    setBusy(true);
+    try {
+      await deleteClient({ data: { userId: client.userId } });
+      toast.success("Cadastro excluído.");
+      onSaved();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Não foi possível excluir.");
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
@@ -164,6 +209,14 @@ function ClientCard({
         <p className="font-display text-xl">
           {client.name || "Sem nome"}
           {!client.userId ? <span className="ml-2 text-xs text-muted-foreground">(sem cadastro)</span> : null}
+        </p>
+        <p>
+          <span className="text-muted-foreground">Telefone: </span>
+          {client.phone || note?.phone || "—"}
+        </p>
+        <p>
+          <span className="text-muted-foreground">E-mail: </span>
+          {client.email || "—"}
         </p>
         <p>
           <span className="text-muted-foreground">Último atendimento: </span>
@@ -180,10 +233,23 @@ function ClientCard({
       </div>
       <div className="space-y-2">
         <Input placeholder="Telefone" value={phone} onChange={(e) => setPhone(e.target.value)} />
+        {isAdmin && client.userId ? (
+          <>
+            <Input type="email" placeholder="E-mail" value={email} onChange={(e) => setEmail(e.target.value)} />
+            <PasswordInput placeholder="Nova senha (deixe vazio para não trocar)" value={password} onChange={(e) => setPassword(e.target.value)} />
+          </>
+        ) : null}
         <Textarea placeholder="Observações" value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} />
-        <Button size="sm" disabled={busy} onClick={save}>
-          Salvar
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button size="sm" disabled={busy} onClick={save}>
+            Salvar
+          </Button>
+          {isAdmin && client.userId ? (
+            <Button size="sm" variant="outline" disabled={busy} onClick={remove}>
+              Excluir cadastro
+            </Button>
+          ) : null}
+        </div>
       </div>
     </div>
   );
