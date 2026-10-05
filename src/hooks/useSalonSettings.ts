@@ -25,6 +25,7 @@ export function useSalonSettings() {
         break_start: data?.break_start ?? DEFAULT_HOURS.break_start,
         break_end: data?.break_end ?? DEFAULT_HOURS.break_end,
         logo_icon: data?.logo_icon ?? "scissors",
+        logo_image: data?.logo_image ?? "",
       };
     },
   });

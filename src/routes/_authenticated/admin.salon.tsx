@@ -2,7 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Check, Pencil, Plus, Trash2, X } from "lucide-react";
+import { Check, ImagePlus, Pencil, Plus, Trash2, X } from "lucide-react";
+import { SalonImage, uploadSalonImage } from "@/lib/images";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -768,7 +769,7 @@ function Look() {
   const { data } = useSalonSettings();
   const current = data?.logo_icon ?? "scissors";
   async function pick(key: string) {
-    const { error } = await supabase.from("salon_settings").upsert({ id: true, logo_icon: key });
+    const { error } = await supabase.from("salon_settings").upsert({ id: true, logo_icon: key, logo_image: "" });
     if (error) {
       toast.error("Não foi possível salvar.");
       return;
@@ -784,6 +785,8 @@ function Look() {
           Aparece ao lado do nome do salão na tela de entrada e no topo do app.
         </p>
       </div>
+      <LogoImage />
+      <p className="text-sm text-muted-foreground">Ou escolha um dos ícones prontos:</p>
       <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
         {Object.entries(LOGO_ICONS).map(([key, { label, Icon }]) => (
           <button
@@ -802,5 +805,61 @@ function Look() {
         ))}
       </div>
     </section>
+  );
+}
+
+function LogoImage() {
+  const queryClient = useQueryClient();
+  const { data } = useSalonSettings();
+  const [busy, setBusy] = useState(false);
+  const path = data?.logo_image ?? "";
+
+  async function save(next: string) {
+    const { error } = await supabase.from("salon_settings").upsert({ id: true, logo_image: next });
+    if (error) {
+      toast.error("Não foi possível salvar.");
+      return;
+    }
+    toast.success(next ? "Imagem do salão salva." : "Imagem removida. Voltou a usar o ícone.");
+    queryClient.invalidateQueries({ queryKey: ["salon-settings"] });
+  }
+
+  async function pick(file: File | undefined) {
+    if (!file) return;
+    if (!file.type.startsWith("image/") || file.size > 5 * 1024 * 1024) {
+      toast.error("Escolha uma imagem de até 5 MB.");
+      return;
+    }
+    setBusy(true);
+    try {
+      await save(await uploadSalonImage(file, "logo"));
+    } catch {
+      toast.error("Não foi possível enviar a imagem.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="flex flex-wrap items-center gap-4 rounded-xl border border-border p-4">
+      <span className="flex size-16 items-center justify-center overflow-hidden rounded-full bg-hero text-primary-foreground">
+        {path ? <SalonImage path={path} alt="Logo do salão" className="size-full rounded-full" /> : <ImagePlus className="size-6" />}
+      </span>
+      <div className="space-y-2">
+        <p className="font-medium">Imagem própria (logo)</p>
+        <p className="text-xs text-muted-foreground">Imagem quadrada, 512 × 512 px (até 5 MB). Ela fica dentro de um círculo.</p>
+        <div className="flex flex-wrap gap-2">
+          <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-sm hover:bg-secondary">
+            {busy ? "Enviando…" : path ? "Trocar imagem" : "Adicionar imagem"}
+            <input type="file" accept="image/*" className="hidden" disabled={busy} onChange={(e) => pick(e.target.files?.[0])} />
+          </label>
+          {path ? (
+            <Button size="sm" variant="outline" onClick={() => save("")}>
+              <Trash2 className="size-4" /> Remover
+            </Button>
+          ) : null}
+        </div>
+      </div>
+    </div>
   );
 }

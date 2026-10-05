@@ -1,5 +1,6 @@
 import { Crown, Flower2, Gem, Hand, Heart, Scissors, Sparkles, Star, Sun, Brush, Eye, Feather } from "lucide-react";
 import { useSalonSettings } from "@/hooks/useSalonSettings";
+import { SalonImage } from "@/lib/images";
 
 export const LOGO_ICONS = {
   scissors: { label: "Tesoura", Icon: Scissors },
@@ -21,6 +22,9 @@ export type LogoIconKey = keyof typeof LOGO_ICONS;
 /** Salon logo icon chosen by the admin (falls back to scissors). */
 export function SalonLogoIcon({ className }: { className?: string }) {
   const { data } = useSalonSettings();
+  if (data?.logo_image) {
+    return <SalonImage path={data.logo_image} alt="Logo do salão" className="size-full rounded-full" />;
+  }
   const key = (data?.logo_icon ?? "scissors") as string;
   const entry = LOGO_ICONS[key as LogoIconKey] ?? LOGO_ICONS.scissors;
   return <entry.Icon className={className} />;
