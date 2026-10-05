@@ -205,7 +205,7 @@ function Booking() {
 
   const service = services?.find((s) => s.id === serviceId);
   const professional = professionals?.find((p) => p.id === professionalId);
-  const ready = Boolean(service && professional && time);
+  const ready = Boolean(service && professional && time && (serviceFormats.length === 0 || formatName));
 
   const clientReady =
     !isStaff || (clientMode === "registered" ? Boolean(clientId) : guestName.trim().length > 1);
