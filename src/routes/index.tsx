@@ -1,7 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Scissors, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
+import { SalonLogoIcon } from "@/lib/logo-icons";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -92,7 +93,7 @@ function AuthPage() {
       <div className="relative hidden flex-col justify-between bg-hero p-12 text-primary-foreground md:flex">
         <div className="flex items-center gap-3">
           <span className="flex size-10 items-center justify-center rounded-full bg-primary-foreground/15">
-            <Scissors className="size-5" />
+            <SalonLogoIcon className="size-5" />
           </span>
           <span className="font-display text-xl">{SALON_NAME}</span>
         </div>
