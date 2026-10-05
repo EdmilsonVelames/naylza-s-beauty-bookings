@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string | null
+          format_name: string
           guest_name: string
           guest_phone: string
           id: string
@@ -36,6 +37,7 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by?: string | null
+          format_name?: string
           guest_name?: string
           guest_phone?: string
           id?: string
@@ -54,6 +56,7 @@ export type Database = {
         Update: {
           created_at?: string
           created_by?: string | null
+          format_name?: string
           guest_name?: string
           guest_phone?: string
           id?: string
@@ -331,22 +334,60 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          image_url: string
           name: string
           position: number
         }
         Insert: {
           created_at?: string
           id?: string
+          image_url?: string
           name: string
           position?: number
         }
         Update: {
           created_at?: string
           id?: string
+          image_url?: string
           name?: string
           position?: number
         }
         Relationships: []
+      }
+      service_formats: {
+        Row: {
+          created_at: string
+          id: string
+          image_url: string
+          name: string
+          position: number
+          service_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_url?: string
+          name: string
+          position?: number
+          service_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_url?: string
+          name?: string
+          position?: number
+          service_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_formats_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       services: {
         Row: {
