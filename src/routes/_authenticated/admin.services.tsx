@@ -2,7 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { ImagePlus, Pencil, Plus, Shapes, Trash2 } from "lucide-react";
+import { SalonImage, uploadSalonImage } from "@/lib/images";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -61,6 +62,7 @@ function AdminServices() {
   const { data: isAdmin, isLoading: loadingRole } = useIsAdmin();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<FormState>(EMPTY);
+  const [formatsFor, setFormatsFor] = useState<{ id: string; name: string } | null>(null);
 
   const { data: services } = useQuery({
     queryKey: ["services-admin"],
@@ -194,6 +196,15 @@ function AdminServices() {
                             <Button
                               size="icon"
                               variant="ghost"
+                              aria-label="Formatos"
+                              title="Formatos"
+                              onClick={() => setFormatsFor({ id: s.id, name: s.name })}
+                            >
+                              <Shapes className="size-4" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
                               aria-label="Editar"
                               onClick={() => {
                                 setForm({
@@ -228,6 +239,15 @@ function AdminServices() {
           </section>
         );
       })}
+
+      <Dialog open={Boolean(formatsFor)} onOpenChange={(o) => !o && setFormatsFor(null)}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Formatos — {formatsFor?.name}</DialogTitle>
+          </DialogHeader>
+          {formatsFor ? <FormatManager serviceId={formatsFor.id} /> : null}
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
@@ -385,6 +405,20 @@ function CategoryManager() {
             <Button size="icon" variant="ghost" aria-label="Remover" onClick={() => remove(c.id)}>
               <Trash2 className="size-4" />
             </Button>
+            <div className="w-full">
+              <ImageUpload
+                path={c.image_url}
+                prefix="categories"
+                hint="Foto horizontal, 1200 × 900 px (4:3, até 5 MB)."
+                className="h-16 w-[86px] rounded-md"
+                onUploaded={async (p) => {
+                  const { error } = await supabase.from("service_categories").update({ image_url: p }).eq("id", c.id);
+                  if (error) { toast.error("Não foi possível salvar a foto."); return; }
+                  toast.success("Foto salva.");
+                  refresh();
+                }}
+              />
+            </div>
           </li>
         ))}
       </ul>
@@ -400,5 +434,152 @@ function CategoryManager() {
         </Button>
       </div>
     </section>
+  );
+}
+
+function ImageUpload({
+  path,
+  prefix,
+  hint,
+  onUploaded,
+  className,
+}: {
+  path: string;
+  prefix: string;
+  hint: string;
+  onUploaded: (path: string) => void;
+  className?: string;
+}) {
+  const [busy, setBusy] = useState(false);
+  async function pick(file: File | undefined) {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Escolha um arquivo de imagem.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("A foto precisa ter até 5 MB.");
+      return;
+    }
+    setBusy(true);
+    try {
+      onUploaded(await uploadSalonImage(file, prefix));
+    } catch {
+      toast.error("Não foi possível enviar a foto.");
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <div className="flex items-center gap-3">
+      <SalonImage path={path} alt="Foto" className={className ?? "size-16 rounded-md"} />
+      <div className="space-y-1">
+        <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-sm hover:bg-secondary">
+          <ImagePlus className="size-4" /> {busy ? "Enviando…" : path ? "Trocar foto" : "Adicionar foto"}
+          <input
+            type="file"
+            accept="image/*"
+            className="hidden"
+            disabled={busy}
+            onChange={(e) => pick(e.target.files?.[0])}
+          />
+        </label>
+        <p className="text-xs text-muted-foreground">{hint}</p>
+      </div>
+    </div>
+  );
+}
+
+function FormatManager({ serviceId }: { serviceId: string }) {
+  const queryClient = useQueryClient();
+  const [newName, setNewName] = useState("");
+  const [edits, setEdits] = useState<Record<string, string>>({});
+  const { data: all } = useQuery({
+    queryKey: ["service-formats"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("service_formats")
+        .select("*")
+        .order("position")
+        .order("name");
+      if (error) throw error;
+      return data;
+    },
+  });
+  const list = (all ?? []).filter((f) => f.service_id === serviceId);
+  const refresh = () => queryClient.invalidateQueries({ queryKey: ["service-formats"] });
+
+  async function update(id: string, patch: { name?: string; image_url?: string }) {
+    const { error } = await supabase.from("service_formats").update(patch).eq("id", id);
+    if (error) { toast.error("Não foi possível salvar."); return; }
+    toast.success("Formato salvo.");
+    setEdits((e) => {
+      const n = { ...e };
+      delete n[id];
+      return n;
+    });
+    refresh();
+  }
+  async function add() {
+    if (!newName.trim()) { toast.error("Informe o nome do formato."); return; }
+    const { error } = await supabase
+      .from("service_formats")
+      .insert({ service_id: serviceId, name: newName.trim(), position: list.length + 1 });
+    if (error) { toast.error("Não foi possível adicionar."); return; }
+    setNewName("");
+    refresh();
+  }
+  async function remove(id: string) {
+    const { error } = await supabase.from("service_formats").delete().eq("id", id);
+    if (error) { toast.error("Não foi possível remover."); return; }
+    refresh();
+  }
+
+  return (
+    <div className="space-y-4">
+      <p className="text-sm text-muted-foreground">
+        Quando a cliente escolher este serviço, abre uma tela para ela escolher um destes formatos.
+        Sem formatos cadastrados, essa tela não aparece.
+      </p>
+      <ul className="space-y-3">
+        {list.map((f) => (
+          <li key={f.id} className="space-y-2 rounded-lg border border-border p-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <Input
+                className="max-w-xs"
+                aria-label="Nome do formato"
+                value={edits[f.id] ?? f.name}
+                onChange={(e) => setEdits({ ...edits, [f.id]: e.target.value })}
+              />
+              {edits[f.id] !== undefined && edits[f.id] !== f.name && (
+                <Button size="sm" onClick={() => update(f.id, { name: edits[f.id]!.trim() })}>
+                  Salvar
+                </Button>
+              )}
+              <Button size="icon" variant="ghost" aria-label="Remover" onClick={() => remove(f.id)}>
+                <Trash2 className="size-4" />
+              </Button>
+            </div>
+            <ImageUpload
+              path={f.image_url}
+              prefix="formats"
+              hint="Foto quadrada, 800 × 800 px (até 5 MB)."
+              onUploaded={(p) => update(f.id, { image_url: p })}
+            />
+          </li>
+        ))}
+      </ul>
+      <div className="flex flex-wrap gap-2">
+        <Input
+          className="max-w-xs"
+          placeholder="Novo formato (ex.: Almond)"
+          value={newName}
+          onChange={(e) => setNewName(e.target.value)}
+        />
+        <Button variant="outline" onClick={add}>
+          <Plus className="size-4" /> Adicionar formato
+        </Button>
+      </div>
+    </div>
   );
 }

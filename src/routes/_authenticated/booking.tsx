@@ -29,6 +29,8 @@ import { Input } from "@/components/ui/input";
 import { useIsStaff } from "@/components/AppShell";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { SalonImage } from "@/lib/images";
 
 export const Route = createFileRoute("/_authenticated/booking")({
   head: () => ({
@@ -66,6 +68,22 @@ function Booking() {
   const [guestName, setGuestName] = useState("");
   const [guestPhone, setGuestPhone] = useState("");
   const [saving, setSaving] = useState(false);
+  const [formatName, setFormatName] = useState("");
+  const [formatOpen, setFormatOpen] = useState(false);
+
+  const { data: formats } = useQuery({
+    queryKey: ["service-formats"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("service_formats")
+        .select("*")
+        .order("position")
+        .order("name");
+      if (error) throw error;
+      return data;
+    },
+  });
+  const serviceFormats = (formats ?? []).filter((f) => f.service_id === serviceId);
 
   const { data: categories } = useQuery({
     queryKey: ["service-categories"],
@@ -187,7 +205,7 @@ function Booking() {
 
   const service = services?.find((s) => s.id === serviceId);
   const professional = professionals?.find((p) => p.id === professionalId);
-  const ready = Boolean(service && professional && time);
+  const ready = Boolean(service && professional && time && (serviceFormats.length === 0 || formatName));
 
   const clientReady =
     !isStaff || (clientMode === "registered" ? Boolean(clientId) : guestName.trim().length > 1);
@@ -201,6 +219,7 @@ function Booking() {
       user_id: clientMode === "registered" ? clientId : u.user.id,
       guest_name: clientMode === "guest" ? guestName.trim() : "",
       guest_phone: clientMode === "guest" ? guestPhone.trim() : "",
+      format_name: formatName,
       created_by: u.user.id,
       service_id: service.id,
       professional_id: professional.id,
@@ -240,6 +259,7 @@ function Booking() {
       professionalId: professional.id,
       professionalName: professional.name,
       startsAt: toIsoSlot(day, time),
+      formatName,
     });
     navigate({ to: "/checkout" });
   }
@@ -312,12 +332,17 @@ function Booking() {
                 <button
                   key={c.id}
                   onClick={() => setCategoryId(c.id)}
-                  className="surface-card p-5 text-left transition-all hover:shadow-[var(--shadow-lift)]"
+                  className="surface-card overflow-hidden text-left transition-all hover:shadow-[var(--shadow-lift)]"
                 >
-                  <p className="font-display text-2xl">{c.name}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {count} {count === 1 ? "serviço" : "serviços"}
-                  </p>
+                  {"image_url" in c && c.image_url ? (
+                    <SalonImage path={c.image_url} alt={c.name} className="aspect-[4/3] w-full" />
+                  ) : null}
+                  <div className="p-5">
+                    <p className="font-display text-2xl">{c.name}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {count} {count === 1 ? "serviço" : "serviços"}
+                    </p>
+                  </div>
                 </button>
               );
             })}
@@ -344,6 +369,8 @@ function Booking() {
                     onClick={() => {
                       setServiceId(s.id);
                       setTime("");
+                      setFormatName("");
+                      if ((formats ?? []).some((f) => f.service_id === s.id)) setFormatOpen(true);
                       const links = (proServices ?? []).filter((l) => l.professional_id === professionalId);
                       if (links.length && !links.some((l) => l.service_id === s.id)) setProfessionalId("");
                     }}
@@ -367,9 +394,45 @@ function Booking() {
                   </button>
                 ))}
             </div>
+            {serviceFormats.length > 0 ? (
+              <div className="surface-card flex flex-wrap items-center justify-between gap-3 p-4">
+                <p className="text-sm">
+                  Formato: <strong>{formatName || "não escolhido"}</strong>
+                </p>
+                <Button size="sm" variant="outline" onClick={() => setFormatOpen(true)}>
+                  {formatName ? "Trocar formato" : "Escolher formato"}
+                </Button>
+              </div>
+            ) : null}
           </>
         )}
       </section>
+
+      <Dialog open={formatOpen} onOpenChange={setFormatOpen}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="font-display text-2xl">Escolha o formato</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {serviceFormats.map((f) => (
+              <button
+                key={f.id}
+                onClick={() => {
+                  setFormatName(f.name);
+                  setFormatOpen(false);
+                }}
+                className={cn(
+                  "surface-card overflow-hidden text-left transition-all hover:shadow-[var(--shadow-lift)]",
+                  formatName === f.name && "ring-2 ring-primary",
+                )}
+              >
+                <SalonImage path={f.image_url} alt={f.name} className="aspect-square w-full" />
+                <p className="p-3 font-medium">{f.name}</p>
+              </button>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <section className="space-y-3">
         <h2 className="font-display text-2xl">2. Profissional</h2>

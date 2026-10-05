@@ -14,7 +14,7 @@ function resolveOrigin() {
   return clean;
 }
 
-type StartInput = { serviceId: string; professionalId: string; startsAt: string };
+type StartInput = { serviceId: string; professionalId: string; startsAt: string; formatName?: string };
 
 export const startDepositCheckout = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -77,6 +77,7 @@ export const startDepositCheckout = createServerFn({ method: "POST" })
         professional_id: data.professionalId,
         starts_at: data.startsAt,
         total_cents: service.price_cents,
+        format_name: (data.formatName ?? "").slice(0, 80),
         paid_cents: 0,
         payment_method: "mercadopago",
         status: "pending",

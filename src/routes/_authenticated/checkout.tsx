@@ -49,6 +49,7 @@ function Checkout() {
           serviceId: draft.serviceId,
           professionalId: draft.professionalId,
           startsAt: draft.startsAt,
+          formatName: draft.formatName ?? "",
         },
       });
       window.location.href = res.url;
@@ -76,6 +77,7 @@ function Checkout() {
         <h2 className="font-display text-2xl">Resumo do agendamento</h2>
         <dl className="mt-4 space-y-2 text-sm">
           <Row label="Serviço" value={draft.serviceName} />
+          {draft.formatName ? <Row label="Formato" value={draft.formatName} /> : null}
           <Row label="Profissional" value={draft.professionalName} />
           <Row label="Data e hora" value={formatDateTime(draft.startsAt)} />
         </dl>
