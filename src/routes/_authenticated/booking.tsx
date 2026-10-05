@@ -116,11 +116,11 @@ function Booking() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("services")
-        .select("*")
+        .select("*, service_categories(hidden)")
         .eq("active", true)
         .order("name");
       if (error) throw error;
-      return data;
+      return data.filter((s) => !s.service_categories?.hidden);
     },
   });
 
@@ -319,7 +319,7 @@ function Booking() {
         {!categoryId ? (
           <div className="grid gap-3 sm:grid-cols-3">
             {[
-              ...(categories ?? []),
+              ...(categories ?? []).filter((c) => !c.hidden),
               ...((services ?? []).some((s) => !s.category_id)
                 ? [{ id: "none", name: "Outros" }]
                 : []),
