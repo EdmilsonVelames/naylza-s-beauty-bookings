@@ -1,0 +1,1 @@
+ALTER TABLE public.salon_settings ADD COLUMN IF NOT EXISTS allow_past_closing boolean NOT NULL DEFAULT true;
