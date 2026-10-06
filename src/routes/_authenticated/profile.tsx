@@ -64,6 +64,7 @@ function Profile() {
     }
     toast.success("Dados atualizados.");
     queryClient.invalidateQueries({ queryKey: ["profile"] });
+    queryClient.invalidateQueries({ queryKey: ["my-phone"] });
   }
 
   async function signOut() {
