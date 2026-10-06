@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       appointments: {
         Row: {
+          client_package_id: string | null
           created_at: string
           created_by: string | null
           format_name: string
@@ -35,6 +36,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          client_package_id?: string | null
           created_at?: string
           created_by?: string | null
           format_name?: string
@@ -54,6 +56,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          client_package_id?: string | null
           created_at?: string
           created_by?: string | null
           format_name?: string
@@ -73,6 +76,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "appointments_client_package_id_fkey"
+            columns: ["client_package_id"]
+            isOneToOne: false
+            referencedRelation: "client_packages"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "appointments_professional_id_fkey"
             columns: ["professional_id"]
@@ -156,6 +166,90 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      client_packages: {
+        Row: {
+          appointment_id: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          package_service_id: string
+          starts_at: string
+          user_id: string
+        }
+        Insert: {
+          appointment_id?: string | null
+          created_at?: string
+          expires_at: string
+          id?: string
+          package_service_id: string
+          starts_at?: string
+          user_id: string
+        }
+        Update: {
+          appointment_id?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          package_service_id?: string
+          starts_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_packages_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: true
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_packages_package_service_id_fkey"
+            columns: ["package_service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      package_items: {
+        Row: {
+          id: string
+          interval_days: number
+          package_service_id: string
+          quantity: number
+          service_id: string
+        }
+        Insert: {
+          id?: string
+          interval_days?: number
+          package_service_id: string
+          quantity?: number
+          service_id: string
+        }
+        Update: {
+          id?: string
+          interval_days?: number
+          package_service_id?: string
+          quantity?: number
+          service_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "package_items_package_service_id_fkey"
+            columns: ["package_service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "package_items_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       payments: {
         Row: {
@@ -408,11 +502,16 @@ export type Database = {
           deposit_percent: number
           deposit_required: boolean
           id: boolean
+          logo_color: string
           logo_icon: string
           logo_image: string
           open_time: string
           slot_minutes: number
           theme_accent: string
+          theme_dark_bg: string
+          theme_dark_fg: string
+          theme_light_bg: string
+          theme_light_fg: string
           theme_primary: string
           updated_at: string
         }
@@ -424,11 +523,16 @@ export type Database = {
           deposit_percent?: number
           deposit_required?: boolean
           id?: boolean
+          logo_color?: string
           logo_icon?: string
           logo_image?: string
           open_time?: string
           slot_minutes?: number
           theme_accent?: string
+          theme_dark_bg?: string
+          theme_dark_fg?: string
+          theme_light_bg?: string
+          theme_light_fg?: string
           theme_primary?: string
           updated_at?: string
         }
@@ -440,11 +544,16 @@ export type Database = {
           deposit_percent?: number
           deposit_required?: boolean
           id?: boolean
+          logo_color?: string
           logo_icon?: string
           logo_image?: string
           open_time?: string
           slot_minutes?: number
           theme_accent?: string
+          theme_dark_bg?: string
+          theme_dark_fg?: string
+          theme_light_bg?: string
+          theme_light_fg?: string
           theme_primary?: string
           updated_at?: string
         }
@@ -523,6 +632,7 @@ export type Database = {
           id: string
           image_url: string
           name: string
+          package_days: number
           price_cents: number
         }
         Insert: {
@@ -535,6 +645,7 @@ export type Database = {
           id?: string
           image_url?: string
           name: string
+          package_days?: number
           price_cents?: number
         }
         Update: {
@@ -547,6 +658,7 @@ export type Database = {
           id?: string
           image_url?: string
           name?: string
+          package_days?: number
           price_cents?: number
         }
         Relationships: [
@@ -599,6 +711,10 @@ export type Database = {
         Returns: boolean
       }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
+      package_remaining: {
+        Args: { _cp: string; _service: string }
+        Returns: number
+      }
       professional_id_of: { Args: { _user_id: string }; Returns: string }
       register_manual_payment: {
         Args: {
