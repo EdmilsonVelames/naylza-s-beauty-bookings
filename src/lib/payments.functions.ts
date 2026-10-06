@@ -16,6 +16,13 @@ function resolveOrigin() {
 
 type StartInput = { serviceId: string; professionalId: string; startsAt: string; formatName?: string };
 
+export const getMyDepositRequired = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data } = await context.supabase.rpc("deposit_required_for", { _user_id: context.userId });
+    return { required: data !== false };
+  });
+
 export const startDepositCheckout = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: StartInput) => data)
@@ -68,6 +75,27 @@ export const startDepositCheckout = createServerFn({ method: "POST" })
       .eq("starts_at", data.startsAt)
       .eq("status", "pending")
       .lt("created_at", new Date(now - 20 * 60_000).toISOString());
+
+    const { data: needsDeposit } = await supabase.rpc("deposit_required_for", { _user_id: userId });
+    if (needsDeposit === false) {
+      const { data: free, error: freeError } = await supabase
+        .from("appointments")
+        .insert({
+          user_id: userId,
+          service_id: data.serviceId,
+          professional_id: data.professionalId,
+          starts_at: data.startsAt,
+          total_cents: service.price_cents,
+          format_name: (data.formatName ?? "").slice(0, 80),
+          paid_cents: 0,
+          payment_method: "salao",
+          status: "confirmed",
+        })
+        .select("id")
+        .single();
+      if (freeError || !free) throw new Error("Não foi possível reservar o horário");
+      return { url: `/confirmation?id=${free.id}`, appointmentId: free.id };
+    }
 
     const { data: appointment, error: apptError } = await supabase
       .from("appointments")

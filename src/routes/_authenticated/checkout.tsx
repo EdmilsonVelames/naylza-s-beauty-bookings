@@ -3,7 +3,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { startDepositCheckout } from "@/lib/payments.functions";
+import { getMyDepositRequired, startDepositCheckout } from "@/lib/payments.functions";
+import { useQuery } from "@tanstack/react-query";
 import { formatBRL, formatDateTime, readDraft, type BookingDraft } from "@/lib/salon";
 import { useSalonSettings, depositFor, DEFAULT_DEPOSIT_PERCENT } from "@/hooks/useSalonSettings";
 
@@ -26,6 +27,9 @@ function Checkout() {
   const [loading, setLoading] = useState(false);
   const { data: settings } = useSalonSettings();
   const percent = settings?.deposit_percent ?? DEFAULT_DEPOSIT_PERCENT;
+  const getRequired = useServerFn(getMyDepositRequired);
+  const { data: req } = useQuery({ queryKey: ["my-deposit-required"], queryFn: () => getRequired() });
+  const needsDeposit = req?.required ?? true;
 
   useEffect(() => {
     const d = readDraft();
@@ -94,6 +98,17 @@ function Checkout() {
         </div>
       </div>
 
+      {!needsDeposit ? (
+        <section className="surface-card space-y-3 p-6">
+          <h2 className="font-display text-2xl">Sem pagamento antecipado</h2>
+          <p className="text-sm text-muted-foreground">
+            Seu horário é confirmado agora, e o valor total ({formatBRL(draft.priceCents)}) é pago no dia do atendimento.
+          </p>
+          <Button className="w-full sm:w-auto" disabled={loading || !req} onClick={pay}>
+            {loading ? "Confirmando…" : "Confirmar agendamento"}
+          </Button>
+        </section>
+      ) : (
       <section className="surface-card space-y-3 p-6">
         <h2 className="font-display text-2xl">Método de pagamento</h2>
         <p className="text-sm text-muted-foreground">
@@ -104,6 +119,7 @@ function Checkout() {
           {loading ? "Abrindo pagamento…" : `Pagar ${percent}% (${formatBRL(deposit)})`}
         </Button>
       </section>
+      )}
     </div>
   );
 }

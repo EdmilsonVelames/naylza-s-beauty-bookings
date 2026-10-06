@@ -26,6 +26,7 @@ export function useSalonSettings() {
         break_end: data?.break_end ?? DEFAULT_HOURS.break_end,
         logo_icon: data?.logo_icon ?? "scissors",
         logo_image: data?.logo_image ?? "",
+        deposit_required: data?.deposit_required ?? true,
       };
     },
   });

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useIsStaff } from "@/components/AppShell";
+import { useSalonSettings } from "@/hooks/useSalonSettings";
 import { useServerFn } from "@tanstack/react-start";
 import { PasswordInput } from "@/components/PasswordInput";
 import { adminDeleteClient, adminUpdateClient } from "@/lib/clients.functions";
@@ -112,6 +113,7 @@ function Clientes() {
         <h1 className="font-display text-4xl">Clientes</h1>
         <p className="mt-1 text-muted-foreground">Histórico, preferências e observações.</p>
       </div>
+      <DepositSettings />
       <Input
         placeholder="Buscar por nome, telefone ou e-mail"
         value={search}
@@ -210,6 +212,7 @@ function ClientCard({
           {client.name || "Sem nome"}
           {!client.userId ? <span className="ml-2 text-xs text-muted-foreground">(sem cadastro)</span> : null}
         </p>
+        {client.userId ? <ClientDepositSelect userId={client.userId} /> : null}
         <p>
           <span className="text-muted-foreground">Telefone: </span>
           {client.phone || note?.phone || "—"}
@@ -252,5 +255,81 @@ function ClientCard({
         </div>
       </div>
     </div>
+  );
+}
+
+function useDepositOverrides() {
+  return useQuery({
+    queryKey: ["deposit-overrides"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("client_deposit_overrides").select("user_id, required");
+      if (error) throw error;
+      return new Map(data.map((o) => [o.user_id, o.required]));
+    },
+  });
+}
+
+function DepositSettings() {
+  const queryClient = useQueryClient();
+  const { data: settings } = useSalonSettings();
+  const on = settings?.deposit_required ?? true;
+  async function toggle() {
+    const { error } = await supabase.rpc("set_deposit_required", { _value: !on });
+    if (error) {
+      toast.error("Não foi possível salvar.");
+      return;
+    }
+    toast.success(!on ? "Pagamento antecipado ativado para todas." : "Pagamento antecipado desativado para todas.");
+    queryClient.invalidateQueries({ queryKey: ["salon-settings"] });
+  }
+  return (
+    <section className="surface-card flex flex-wrap items-center justify-between gap-3 p-4">
+      <div>
+        <h2 className="font-display text-xl">Pagamento antecipado de {settings?.deposit_percent ?? 50}%</h2>
+        <p className="text-sm text-muted-foreground">
+          {on
+            ? "Ativado: as clientes pagam o sinal para confirmar o horário."
+            : "Desativado: as clientes agendam sem pagar antes."}{" "}
+          Abaixo, em cada cliente, dá para mudar só para ela.
+        </p>
+      </div>
+      <Button variant={on ? "default" : "outline"} onClick={toggle}>
+        {on ? "Desativar para todas" : "Ativar para todas"}
+      </Button>
+    </section>
+  );
+}
+
+function ClientDepositSelect({ userId }: { userId: string }) {
+  const queryClient = useQueryClient();
+  const { data: overrides } = useDepositOverrides();
+  const current = overrides?.has(userId) ? (overrides.get(userId) ? "on" : "off") : "default";
+  async function change(v: string) {
+    const { error } =
+      v === "default"
+        ? await supabase.from("client_deposit_overrides").delete().eq("user_id", userId)
+        : await supabase
+            .from("client_deposit_overrides")
+            .upsert({ user_id: userId, required: v === "on", updated_at: new Date().toISOString() });
+    if (error) {
+      toast.error("Não foi possível salvar.");
+      return;
+    }
+    toast.success("Pagamento antecipado atualizado para esta cliente.");
+    queryClient.invalidateQueries({ queryKey: ["deposit-overrides"] });
+  }
+  return (
+    <label className="flex flex-wrap items-center gap-2 py-1">
+      <span className="text-muted-foreground">Sinal antecipado:</span>
+      <select
+        value={current}
+        onChange={(e) => change(e.target.value)}
+        className="rounded-md border border-input bg-background px-2 py-1 text-sm"
+      >
+        <option value="default">Igual a todas</option>
+        <option value="on">Exigir</option>
+        <option value="off">Não exigir</option>
+      </select>
+    </label>
   );
 }
