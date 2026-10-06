@@ -34,6 +34,15 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [remember, setRemember] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("naylza.remember.email");
+    if (saved) {
+      setEmail(saved);
+      setRemember(true);
+    }
+  }, []);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -49,6 +58,8 @@ function AuthPage() {
       toast.error("Não foi possível entrar. Verifique e-mail e senha.");
       return;
     }
+    if (remember) localStorage.setItem("naylza.remember.email", email);
+    else localStorage.removeItem("naylza.remember.email");
     navigate({ to: "/dashboard", replace: true });
   }
 
@@ -122,7 +133,14 @@ function AuthPage() {
             Use seu e-mail para acessar sua agenda.
           </p>
 
-          <div className="mt-6 space-y-4">
+          <form
+            className="mt-6 space-y-4"
+            autoComplete="on"
+            onSubmit={(e) => {
+              e.preventDefault();
+              void handleSignIn();
+            }}
+          >
             <div className="space-y-1.5">
               <Label htmlFor="name">Nome (para nova conta)</Label>
               <Input
@@ -137,6 +155,8 @@ function AuthPage() {
               <Input
                 id="email"
                 type="email"
+                name="email"
+                autoComplete="username"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="voce@email.com"
@@ -147,16 +167,28 @@ function AuthPage() {
               <Input
                 id="password"
                 type="password"
+                name="password"
+                autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
               />
             </div>
 
-            <Button className="w-full" disabled={loading} onClick={handleSignIn}>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={remember}
+                onChange={(e) => setRemember(e.target.checked)}
+                className="size-4 accent-primary"
+              />
+              Lembrar meu login e senha
+            </label>
+            <Button type="submit" className="w-full" disabled={loading}>
               Entrar
             </Button>
             <Button
+              type="button"
               variant="outline"
               className="w-full"
               disabled={loading}
@@ -172,7 +204,7 @@ function AuthPage() {
             >
               Esqueci minha senha
             </button>
-          </div>
+          </form>
         </div>
       </div>
     </div>
