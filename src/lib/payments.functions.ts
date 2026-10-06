@@ -14,7 +14,7 @@ function resolveOrigin() {
   return clean;
 }
 
-type StartInput = { serviceId: string; professionalId: string; startsAt: string; formatName?: string };
+type StartInput = { serviceId: string; professionalId: string; startsAt: string; formatName?: string; clientPackageId?: string };
 
 export const getMyDepositRequired = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -75,6 +75,38 @@ export const startDepositCheckout = createServerFn({ method: "POST" })
       .eq("starts_at", data.startsAt)
       .eq("status", "pending")
       .lt("created_at", new Date(now - 20 * 60_000).toISOString());
+
+    if (data.clientPackageId) {
+      const { data: left } = await supabase.rpc("package_remaining", {
+        _cp: data.clientPackageId,
+        _service: data.serviceId,
+      });
+      const { data: cp } = await supabase
+        .from("client_packages")
+        .select("id, user_id")
+        .eq("id", data.clientPackageId)
+        .maybeSingle();
+      if (!cp || cp.user_id !== userId || (left ?? 0) <= 0)
+        throw new Error("Este procedimento não está mais disponível no seu pacote.");
+      const { data: pk, error: pkError } = await supabase
+        .from("appointments")
+        .insert({
+          user_id: userId,
+          service_id: data.serviceId,
+          professional_id: data.professionalId,
+          starts_at: data.startsAt,
+          total_cents: 0,
+          format_name: (data.formatName ?? "").slice(0, 80),
+          paid_cents: 0,
+          payment_method: "pacote",
+          status: "confirmed",
+          client_package_id: cp.id,
+        })
+        .select("id")
+        .single();
+      if (pkError || !pk) throw new Error("Não foi possível reservar o horário");
+      return { url: `/confirmation?id=${pk.id}`, appointmentId: pk.id };
+    }
 
     const { data: needsDeposit } = await supabase.rpc("deposit_required_for", { _user_id: userId });
     if (needsDeposit === false) {

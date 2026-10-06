@@ -54,6 +54,7 @@ function Checkout() {
           professionalId: draft.professionalId,
           startsAt: draft.startsAt,
           formatName: draft.formatName ?? "",
+          clientPackageId: draft.clientPackageId,
         },
       });
       window.location.href = res.url;
