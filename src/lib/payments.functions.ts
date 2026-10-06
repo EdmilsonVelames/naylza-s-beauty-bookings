@@ -14,7 +14,7 @@ function resolveOrigin() {
   return clean;
 }
 
-type StartInput = { serviceId: string; professionalId: string; startsAt: string; formatName?: string; clientPackageId?: string };
+type StartInput = { serviceId: string; professionalId: string; startsAt: string; formatName?: string; clientPackageId?: string | undefined };
 
 export const getMyDepositRequired = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

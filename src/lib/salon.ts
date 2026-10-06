@@ -97,7 +97,7 @@ export type BookingDraft = {
   professionalName: string;
   startsAt: string;
   formatName?: string;
-  clientPackageId?: string;
+  clientPackageId?: string | undefined;
 };
 
 const KEY = "naylza.booking.draft";

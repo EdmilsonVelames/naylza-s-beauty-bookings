@@ -689,7 +689,10 @@ function PackageManager({
 
   async function saveDays() {
     const { error } = await supabase.from("services").update({ package_days: Math.max(1, Number(days) || 30) }).eq("id", pkg.id);
-    if (error) return toast.error("Não foi possível salvar.");
+    if (error) {
+      toast.error("Não foi possível salvar.");
+      return;
+    }
     toast.success("Validade salva.");
     queryClient.invalidateQueries({ queryKey: ["services-admin"] });
   }
@@ -699,7 +702,10 @@ function PackageManager({
       { package_service_id: pkg.id, service_id: svc, quantity: Math.max(1, Number(qty) || 1), interval_days: Math.max(0, Number(interval) || 0) },
       { onConflict: "package_service_id,service_id" },
     );
-    if (error) return toast.error("Não foi possível adicionar.");
+    if (error) {
+      toast.error("Não foi possível adicionar.");
+      return;
+    }
     setSvc("");
     refresh();
   }
