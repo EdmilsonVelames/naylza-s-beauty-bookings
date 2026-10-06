@@ -355,6 +355,7 @@ function Hours() {
     slot_minutes: "30",
     break_start: "12:00",
     break_end: "13:00",
+    allow_past_closing: true,
   });
 
   useEffect(() => {
@@ -365,6 +366,7 @@ function Hours() {
       slot_minutes: String(settings.slot_minutes),
       break_start: settings.break_start,
       break_end: settings.break_end,
+      allow_past_closing: settings.allow_past_closing,
     });
   }, [settings]);
 
@@ -394,6 +396,7 @@ function Hours() {
         slot_minutes: Math.round(step),
         break_start: form.break_start,
         break_end: form.break_end,
+        allow_past_closing: form.allow_past_closing,
         updated_at: new Date().toISOString(),
       })
       .eq("id", true);
@@ -461,6 +464,20 @@ function Hours() {
             />
           </div>
         </div>
+        <label className="flex items-start gap-2 text-sm">
+          <input
+            type="checkbox"
+            className="mt-0.5 size-4 accent-primary"
+            checked={form.allow_past_closing}
+            onChange={(e) => setForm({ ...form, allow_past_closing: e.target.checked })}
+          />
+          <span>
+            Liberar horários mesmo que o serviço termine depois do fechamento
+            <span className="block text-xs text-muted-foreground">
+              Desmarcado: só aparecem horários em que o serviço acaba antes de fechar.
+            </span>
+          </span>
+        </label>
         <Button onClick={save}>Salvar horários</Button>
       </section>
 

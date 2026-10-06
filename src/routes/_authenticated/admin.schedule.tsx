@@ -87,7 +87,22 @@ function AdminSchedule() {
           .gte("starts_at", start)
           .lte("starts_at", end),
       ]);
-      return { appointments: appts.data ?? [], blocks: blocks.data ?? [] };
+      const ids = [...new Set((appts.data ?? []).map((a) => a.user_id))];
+      const { data: profs } = ids.length
+        ? await supabase.from("profiles").select("id, full_name, phone, email").in("id", ids)
+        : { data: [] };
+      const byId = new Map((profs ?? []).map((p) => [p.id, p]));
+      return {
+        appointments: (appts.data ?? []).map((a) => {
+          const p = byId.get(a.user_id);
+          return {
+            ...a,
+            clientName: a.guest_name || p?.full_name || p?.email || "Cliente",
+            clientPhone: a.guest_phone || p?.phone || "",
+          };
+        }),
+        blocks: blocks.data ?? [],
+      };
     },
   });
 
@@ -218,7 +233,8 @@ function AdminSchedule() {
                 <div className="min-w-0 flex-1">
                   <p className="font-medium">{a.services?.name}</p>
                   <p className="text-sm text-muted-foreground">
-                    Cliente
+                    {a.clientName}
+                    {a.clientPhone ? ` · ${a.clientPhone}` : " · sem telefone"}
                   </p>
                 </div>
                 <span className="text-sm text-muted-foreground">

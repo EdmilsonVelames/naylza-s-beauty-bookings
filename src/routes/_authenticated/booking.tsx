@@ -30,6 +30,8 @@ import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { useIsStaff } from "@/components/AppShell";
 import { toast } from "sonner";
+import { useServerFn } from "@tanstack/react-start";
+import { staffCreateClient } from "@/lib/clients.functions";
 import { useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { SalonImage } from "@/lib/images";
@@ -70,6 +72,8 @@ function Booking() {
   const [clientId, setClientId] = useState("");
   const [guestName, setGuestName] = useState("");
   const [guestPhone, setGuestPhone] = useState("");
+  const [guestEmail, setGuestEmail] = useState("");
+  const createClient = useServerFn(staffCreateClient);
   const [saving, setSaving] = useState(false);
   const [formatName, setFormatName] = useState("");
   const [formatOpen, setFormatOpen] = useState(false);
@@ -228,10 +232,23 @@ function Booking() {
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) return;
     setSaving(true);
+    let targetId = clientId;
+    if (clientMode === "guest") {
+      try {
+        const r = await createClient({
+          data: { name: guestName.trim(), phone: guestPhone.trim(), email: guestEmail.trim() },
+        });
+        targetId = r.userId;
+      } catch (e) {
+        setSaving(false);
+        toast.error(e instanceof Error ? e.message : "Não foi possível criar o cadastro.");
+        return;
+      }
+    }
     const { error } = await supabase.from("appointments").insert({
-      user_id: clientMode === "registered" ? clientId : u.user.id,
-      guest_name: clientMode === "guest" ? guestName.trim() : "",
-      guest_phone: clientMode === "guest" ? guestPhone.trim() : "",
+      user_id: targetId,
+      guest_name: "",
+      guest_phone: "",
       format_name: formatName,
       created_by: u.user.id,
       service_id: service.id,
@@ -255,7 +272,10 @@ function Booking() {
     setTime("");
     setGuestName("");
     setGuestPhone("");
+    setGuestEmail("");
     setClientId("");
+    setClientMode("registered");
+    queryClient.invalidateQueries({ queryKey: ["staff-clients-list"] });
     queryClient.invalidateQueries({ queryKey: ["slots"] });
   }
 
@@ -322,6 +342,8 @@ function Booking() {
             <div className="grid gap-2 sm:grid-cols-2">
               <Input placeholder="Nome da cliente" value={guestName} onChange={(e) => setGuestName(e.target.value)} />
               <Input placeholder="Telefone" value={guestPhone} onChange={(e) => setGuestPhone(e.target.value)} />
+              <Input type="email" placeholder="E-mail (opcional)" value={guestEmail} onChange={(e) => setGuestEmail(e.target.value)} className="sm:col-span-2" />
+              <p className="text-xs text-muted-foreground sm:col-span-2">O cadastro da cliente é criado automaticamente.</p>
             </div>
           )}
         </section>
@@ -500,7 +522,7 @@ function Booking() {
               {slots.map((h) => {
                 const ts = new Date(toIsoSlot(day, h)).getTime();
                 const duration = service.duration_min;
-                const fitsInDay = minutesOf(h) + duration <= closeMinutes;
+                const fitsInDay = (hours?.allow_past_closing ?? true) || minutesOf(h) + duration <= closeMinutes;
                 const taken = overlaps(ts, duration, busy ?? []);
                 const disabled = isDayOff || taken || ts < Date.now() || !fitsInDay;
                 return (
