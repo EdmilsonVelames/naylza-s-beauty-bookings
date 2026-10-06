@@ -10,18 +10,63 @@ import { dayKey } from "@/lib/salon";
 import { cn } from "@/lib/utils";
 
 const WEEK = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+const WEEK_FULL = ["domingo", "segunda", "terça", "quarta", "quinta", "sexta", "sábado"];
+
+export function WeeklyOffEditor({ professionalId }: { professionalId: string }) {
+  const queryClient = useQueryClient();
+  const { data: daysOff } = useDaysOff(professionalId);
+  async function toggle(w: number) {
+    const on = daysOff?.weekdays.has(w);
+    const { error } = on
+      ? await supabase.from("professional_weekly_off").delete().eq("professional_id", professionalId).eq("weekday", w)
+      : await supabase.from("professional_weekly_off").insert({ professional_id: professionalId, weekday: w });
+    if (error) {
+      toast.error("Não foi possível salvar.");
+      return;
+    }
+    toast.success(on ? `Folga de toda ${WEEK_FULL[w]} removida.` : `Toda ${WEEK_FULL[w]} agora é folga.`);
+    queryClient.invalidateQueries({ queryKey: ["days-off"] });
+  }
+  return (
+    <section className="surface-card space-y-3 p-4">
+      <div>
+        <h3 className="font-display text-xl">Folga fixa na semana</h3>
+        <p className="text-sm text-muted-foreground">Toque no dia da semana para deixar todas as datas dele como folga.</p>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {WEEK.map((w, i) => (
+          <Button key={w} size="sm" variant={daysOff?.weekdays.has(i) ? "default" : "outline"} onClick={() => toggle(i)}>
+            {w}
+          </Button>
+        ))}
+      </div>
+    </section>
+  );
+}
 
 export function useDaysOff(professionalId: string) {
   return useQuery({
     queryKey: ["days-off", professionalId],
     enabled: Boolean(professionalId),
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("professional_days_off")
-        .select("day")
-        .eq("professional_id", professionalId);
-      if (error) throw error;
-      return new Set(data.map((d) => d.day));
+      const [days, weekly] = await Promise.all([
+        supabase.from("professional_days_off").select("day").eq("professional_id", professionalId),
+        supabase.from("professional_weekly_off").select("weekday").eq("professional_id", professionalId),
+      ]);
+      if (days.error) throw days.error;
+      if (weekly.error) throw weekly.error;
+      const dates = new Set(days.data.map((d) => d.day));
+      const weekdays = new Set(weekly.data.map((w) => w.weekday));
+      return {
+        dates,
+        weekdays,
+        /** yyyy-mm-dd is a day off (single date or weekly). */
+        has: (k: string) => {
+          if (dates.has(k)) return true;
+          const [y, m, d] = k.split("-").map(Number);
+          return weekdays.has(new Date(y!, m! - 1, d!).getDay());
+        },
+      };
     },
   });
 }
@@ -124,7 +169,11 @@ export function DayOffToggle({ professionalId, day }: { professionalId: string; 
   const queryClient = useQueryClient();
   const { data: daysOff } = useDaysOff(professionalId);
   const k = dayKey(day);
-  const off = daysOff?.has(k) ?? false;
+  const off = daysOff?.dates.has(k) ?? false;
+  const weeklyOff = daysOff?.weekdays.has(day.getDay()) ?? false;
+  if (weeklyOff && !off) {
+    return <p className="text-sm text-muted-foreground">Folga fixa toda {WEEK_FULL[day.getDay()]}.</p>;
+  }
   async function toggle() {
     const { error } = off
       ? await supabase.from("professional_days_off").delete().eq("professional_id", professionalId).eq("day", k)
@@ -200,5 +249,72 @@ export function ProHoursEditor({
         {own ? <Button variant="outline" onClick={() => save(true)}>Usar horário do salão</Button> : null}
       </div>
     </section>
+  );
+}
+
+/** Month calendar for clients picking a date (past and off days disabled). */
+export function PickCalendar({
+  professionalId,
+  day,
+  onSelect,
+}: {
+  professionalId: string;
+  day: Date;
+  onSelect: (d: Date) => void;
+}) {
+  const [month, setMonth] = useState(() => new Date(day.getFullYear(), day.getMonth(), 1));
+  const { data: daysOff } = useDaysOff(professionalId);
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const isCurrentMonth = month.getFullYear() === now.getFullYear() && month.getMonth() === now.getMonth();
+  const cells = useMemo(() => {
+    const total = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
+    return [
+      ...Array.from({ length: month.getDay() }, () => null),
+      ...Array.from({ length: total }, (_, i) => new Date(month.getFullYear(), month.getMonth(), i + 1)),
+    ];
+  }, [month]);
+  return (
+    <div className="surface-card max-w-md p-4">
+      <div className="mb-3 flex items-center justify-between">
+        <Button size="icon" variant="ghost" aria-label="Mês anterior" disabled={isCurrentMonth} onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))}>
+          <ChevronLeft className="size-4" />
+        </Button>
+        <p className="font-display text-xl capitalize">
+          {month.toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}
+        </p>
+        <Button size="icon" variant="ghost" aria-label="Próximo mês" onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))}>
+          <ChevronRight className="size-4" />
+        </Button>
+      </div>
+      <div className="grid grid-cols-7 gap-1 text-center text-xs text-muted-foreground">
+        {WEEK.map((w) => (
+          <span key={w} className="py-1">{w}</span>
+        ))}
+        {cells.map((d, i) => {
+          if (!d) return <span key={`e${i}`} />;
+          const k = dayKey(d);
+          const off = professionalId ? daysOff?.has(k) : false;
+          const past = d < todayStart;
+          const selected = k === dayKey(day);
+          return (
+            <button
+              key={k}
+              disabled={past || off}
+              onClick={() => onSelect(d)}
+              className={cn(
+                "flex aspect-square flex-col items-center justify-center rounded-lg border border-border bg-card text-sm text-foreground transition-colors hover:bg-secondary",
+                (past || off) && "cursor-not-allowed opacity-40",
+                off && "line-through",
+                selected && "bg-primary text-primary-foreground border-transparent",
+              )}
+            >
+              {d.getDate()}
+              {off && !past ? <span className="text-[10px]">folga</span> : null}
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 }

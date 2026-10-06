@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useIsAdmin, useMyProfessional } from "@/components/AppShell";
 import { buildSlots, formatBRL, formatDayLabel, hoursFor, sameDayRange, toIsoSlot } from "@/lib/salon";
-import { DayOffToggle, MonthCalendar, ProHoursEditor } from "@/components/ScheduleTools";
+import { DayOffToggle, MonthCalendar, ProHoursEditor, WeeklyOffEditor } from "@/components/ScheduleTools";
 import { useSalonSettings, DEFAULT_HOURS } from "@/hooks/useSalonSettings";
 import { cn } from "@/lib/utils";
 
@@ -157,6 +157,7 @@ function AdminSchedule() {
       </div>
 
       {activePro ? <ProHoursEditor professional={activePro} /> : null}
+      {activePro ? <WeeklyOffEditor professionalId={activePro.id} /> : null}
 
       <MonthCalendar professionalId={activeProfessional} day={day} onSelect={setDay} />
       <div className="flex flex-wrap items-center justify-between gap-3">

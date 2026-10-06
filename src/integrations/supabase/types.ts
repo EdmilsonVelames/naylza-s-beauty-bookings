@@ -118,6 +118,24 @@ export type Database = {
           },
         ]
       }
+      client_deposit_overrides: {
+        Row: {
+          required: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          required: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          required?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       client_notes: {
         Row: {
           client_key: string
@@ -245,6 +263,29 @@ export type Database = {
           },
         ]
       }
+      professional_weekly_off: {
+        Row: {
+          professional_id: string
+          weekday: number
+        }
+        Insert: {
+          professional_id: string
+          weekday: number
+        }
+        Update: {
+          professional_id?: string
+          weekday?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "professional_weekly_off_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "professionals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       professionals: {
         Row: {
           active: boolean
@@ -338,6 +379,7 @@ export type Database = {
           break_start: string
           close_time: string
           deposit_percent: number
+          deposit_required: boolean
           id: boolean
           logo_icon: string
           logo_image: string
@@ -350,6 +392,7 @@ export type Database = {
           break_start?: string
           close_time?: string
           deposit_percent?: number
+          deposit_required?: boolean
           id?: boolean
           logo_icon?: string
           logo_image?: string
@@ -362,6 +405,7 @@ export type Database = {
           break_start?: string
           close_time?: string
           deposit_percent?: number
+          deposit_required?: boolean
           id?: boolean
           logo_icon?: string
           logo_image?: string
@@ -442,6 +486,7 @@ export type Database = {
           description: string
           duration_min: number
           id: string
+          image_url: string
           name: string
           price_cents: number
         }
@@ -453,6 +498,7 @@ export type Database = {
           description?: string
           duration_min?: number
           id?: string
+          image_url?: string
           name: string
           price_cents?: number
         }
@@ -464,6 +510,7 @@ export type Database = {
           description?: string
           duration_min?: number
           id?: string
+          image_url?: string
           name?: string
           price_cents?: number
         }
@@ -504,6 +551,7 @@ export type Database = {
         Args: { _appointment_id: string; _method: string }
         Returns: undefined
       }
+      deposit_required_for: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -525,6 +573,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      set_deposit_required: { Args: { _value: boolean }; Returns: undefined }
       set_professional_hours: {
         Args: {
           _bend: string

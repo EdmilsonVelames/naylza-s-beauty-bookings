@@ -48,6 +48,7 @@ type FormState = {
   price: string;
   duration: string;
   category: Category;
+  image: string;
 };
 
 const EMPTY: FormState = {
@@ -56,6 +57,7 @@ const EMPTY: FormState = {
   price: "",
   duration: "60",
   category: "",
+  image: "",
 };
 
 function AdminServices() {
@@ -95,6 +97,7 @@ function AdminServices() {
       price_cents: Math.round(Number(form.price.replace(",", ".")) * 100) || 0,
       duration_min: Number(form.duration) || 60,
       category_id: form.category || null,
+      image_url: form.image,
     };
     const res = form.id
       ? await supabase.from("services").update(payload).eq("id", form.id)
@@ -218,6 +221,7 @@ function AdminServices() {
                                   price: (s.price_cents / 100).toFixed(2),
                                   duration: String(s.duration_min),
                                   category: s.category_id ?? "",
+                                  image: s.image_url ?? "",
                                 });
                                 setOpen(true);
                               }}
@@ -274,6 +278,21 @@ function AdminServices() {
                   </Button>
                 ))}
               </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Foto (opcional)</Label>
+              <ImageUpload
+                path={form.image}
+                prefix="services"
+                hint="Horizontal, 1200 × 900 pixels, até 5 MB."
+                onUploaded={(p) => setForm((f) => ({ ...f, image: p }))}
+                className="h-16 w-20 rounded-md"
+              />
+              {form.image ? (
+                <Button type="button" size="sm" variant="ghost" onClick={() => setForm({ ...form, image: "" })}>
+                  Remover foto
+                </Button>
+              ) : null}
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="s-name">Nome</Label>
