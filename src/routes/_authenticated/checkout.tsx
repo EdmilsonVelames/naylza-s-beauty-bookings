@@ -29,7 +29,7 @@ function Checkout() {
   const percent = settings?.deposit_percent ?? DEFAULT_DEPOSIT_PERCENT;
   const getRequired = useServerFn(getMyDepositRequired);
   const { data: req } = useQuery({ queryKey: ["my-deposit-required"], queryFn: () => getRequired() });
-  const needsDeposit = req?.required ?? true;
+  const needsDeposit = (req?.required ?? true) && !draft?.clientPackageId;
 
   useEffect(() => {
     const d = readDraft();
