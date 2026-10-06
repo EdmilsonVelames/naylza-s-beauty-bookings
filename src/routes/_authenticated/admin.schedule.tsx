@@ -274,7 +274,7 @@ function ConfirmedList({
   onDelete,
 }: {
   professionals: { id: string; name: string }[];
-  onDelete?: (id: string, label: string) => void;
+  onDelete?: ((id: string, label: string) => void) | undefined;
 }) {
   const [pro, setPro] = useState("");
   const { data = [], isLoading } = useQuery({
