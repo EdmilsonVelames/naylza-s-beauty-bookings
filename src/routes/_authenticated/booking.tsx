@@ -33,7 +33,7 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { SalonImage } from "@/lib/images";
-import { useDaysOff } from "@/components/ScheduleTools";
+import { PickCalendar, useDaysOff } from "@/components/ScheduleTools";
 
 export const Route = createFileRoute("/_authenticated/booking")({
   head: () => ({
@@ -58,7 +58,7 @@ function nextDays(count: number) {
 
 function Booking() {
   const navigate = useNavigate();
-  const days = useMemo(() => nextDays(14), []);
+  const days = useMemo(() => nextDays(1), []);
   const [serviceId, setServiceId] = useState<string>("");
   const [professionalId, setProfessionalId] = useState<string>("");
   const [day, setDay] = useState<Date>(days[0]!);
@@ -388,10 +388,14 @@ function Booking() {
                       if (links.length && !links.some((l) => l.service_id === s.id)) setProfessionalId("");
                     }}
                     className={cn(
-                      "surface-card p-4 text-left transition-all hover:shadow-[var(--shadow-lift)]",
+                      "surface-card overflow-hidden text-left transition-all hover:shadow-[var(--shadow-lift)]",
                       serviceId === s.id && "ring-2 ring-primary",
                     )}
                   >
+                    {s.image_url ? (
+                      <SalonImage path={s.image_url} alt={s.name} className="aspect-[4/3] w-full" />
+                    ) : null}
+                    <div className="p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <p className="font-medium">{s.name}</p>
@@ -404,6 +408,7 @@ function Booking() {
                     <p className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
                       <Clock className="size-3.5" /> {s.duration_min} min
                     </p>
+                    </div>
                   </button>
                 ))}
             </div>
@@ -472,24 +477,15 @@ function Booking() {
 
       <section className="space-y-3">
         <h2 className="font-display text-2xl">3. Data</h2>
-        <div className="flex gap-2 overflow-x-auto pb-2">
-          {days.map((d) => (
-            <button
-              key={d.toISOString()}
-              onClick={() => {
-                setDay(d);
-                setTime("");
-              }}
-              className={cn(
-                "min-w-[92px] rounded-xl border border-border bg-card px-3 py-3 text-sm capitalize transition-colors",
-                d.toDateString() === day.toDateString() &&
-                  "bg-hero text-primary-foreground border-transparent",
-              )}
-            >
-              {formatDayLabel(d)}
-            </button>
-          ))}
-        </div>
+        <PickCalendar
+          professionalId={professionalId}
+          day={day}
+          onSelect={(d) => {
+            setDay(d);
+            setTime("");
+          }}
+        />
+        <p className="font-display text-xl capitalize">{formatDayLabel(day)}</p>
       </section>
 
       <section className="space-y-3">

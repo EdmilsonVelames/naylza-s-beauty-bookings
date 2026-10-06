@@ -251,3 +251,70 @@ export function ProHoursEditor({
     </section>
   );
 }
+
+/** Month calendar for clients picking a date (past and off days disabled). */
+export function PickCalendar({
+  professionalId,
+  day,
+  onSelect,
+}: {
+  professionalId: string;
+  day: Date;
+  onSelect: (d: Date) => void;
+}) {
+  const [month, setMonth] = useState(() => new Date(day.getFullYear(), day.getMonth(), 1));
+  const { data: daysOff } = useDaysOff(professionalId);
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const isCurrentMonth = month.getFullYear() === now.getFullYear() && month.getMonth() === now.getMonth();
+  const cells = useMemo(() => {
+    const total = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
+    return [
+      ...Array.from({ length: month.getDay() }, () => null),
+      ...Array.from({ length: total }, (_, i) => new Date(month.getFullYear(), month.getMonth(), i + 1)),
+    ];
+  }, [month]);
+  return (
+    <div className="surface-card max-w-md p-4">
+      <div className="mb-3 flex items-center justify-between">
+        <Button size="icon" variant="ghost" aria-label="Mês anterior" disabled={isCurrentMonth} onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))}>
+          <ChevronLeft className="size-4" />
+        </Button>
+        <p className="font-display text-xl capitalize">
+          {month.toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}
+        </p>
+        <Button size="icon" variant="ghost" aria-label="Próximo mês" onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))}>
+          <ChevronRight className="size-4" />
+        </Button>
+      </div>
+      <div className="grid grid-cols-7 gap-1 text-center text-xs text-muted-foreground">
+        {WEEK.map((w) => (
+          <span key={w} className="py-1">{w}</span>
+        ))}
+        {cells.map((d, i) => {
+          if (!d) return <span key={`e${i}`} />;
+          const k = dayKey(d);
+          const off = professionalId ? daysOff?.has(k) : false;
+          const past = d < todayStart;
+          const selected = k === dayKey(day);
+          return (
+            <button
+              key={k}
+              disabled={past || off}
+              onClick={() => onSelect(d)}
+              className={cn(
+                "flex aspect-square flex-col items-center justify-center rounded-lg border border-border bg-card text-sm text-foreground transition-colors hover:bg-secondary",
+                (past || off) && "cursor-not-allowed opacity-40",
+                off && "line-through",
+                selected && "bg-primary text-primary-foreground border-transparent",
+              )}
+            >
+              {d.getDate()}
+              {off && !past ? <span className="text-[10px]">folga</span> : null}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}

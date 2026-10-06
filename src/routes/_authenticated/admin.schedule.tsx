@@ -157,6 +157,7 @@ function AdminSchedule() {
       </div>
 
       {activePro ? <ProHoursEditor professional={activePro} /> : null}
+      {activePro ? <WeeklyOffEditor professionalId={activePro.id} /> : null}
 
       <MonthCalendar professionalId={activeProfessional} day={day} onSelect={setDay} />
       <div className="flex flex-wrap items-center justify-between gap-3">
