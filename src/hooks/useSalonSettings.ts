@@ -30,6 +30,11 @@ export function useSalonSettings() {
         allow_past_closing: data?.allow_past_closing ?? true,
         theme_primary: data?.theme_primary ?? "",
         theme_accent: data?.theme_accent ?? "",
+        logo_color: data?.logo_color ?? "",
+        theme_light_bg: data?.theme_light_bg ?? "",
+        theme_light_fg: data?.theme_light_fg ?? "",
+        theme_dark_bg: data?.theme_dark_bg ?? "",
+        theme_dark_fg: data?.theme_dark_fg ?? "",
       };
     },
   });

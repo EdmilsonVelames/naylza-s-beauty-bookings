@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { ImagePlus, Pencil, Plus, Shapes, Trash2, ChevronUp, ChevronDown } from "lucide-react";
+import { ImagePlus, Pencil, Plus, Shapes, Trash2, ChevronUp, ChevronDown, Package } from "lucide-react";
 import { SalonImage, uploadSalonImage } from "@/lib/images";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -66,6 +66,7 @@ function AdminServices() {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<FormState>(EMPTY);
   const [formatsFor, setFormatsFor] = useState<{ id: string; name: string } | null>(null);
+  const [pkgFor, setPkgFor] = useState<{ id: string; name: string; days: number } | null>(null);
 
   const { data: services } = useQuery({
     queryKey: ["services-admin"],
@@ -203,6 +204,15 @@ function AdminServices() {
                             <Button
                               size="icon"
                               variant="ghost"
+                              aria-label="Conteúdo do pacote"
+                              title="Conteúdo do pacote"
+                              onClick={() => setPkgFor({ id: s.id, name: s.name, days: s.package_days })}
+                            >
+                              <Package className="size-4" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
                               aria-label="Formatos"
                               title="Formatos"
                               onClick={() => setFormatsFor({ id: s.id, name: s.name })}
@@ -254,6 +264,15 @@ function AdminServices() {
             <DialogTitle>Formatos — {formatsFor?.name}</DialogTitle>
           </DialogHeader>
           {formatsFor ? <FormatManager serviceId={formatsFor.id} /> : null}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={Boolean(pkgFor)} onOpenChange={(o) => !o && setPkgFor(null)}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Pacote — {pkgFor?.name}</DialogTitle>
+          </DialogHeader>
+          {pkgFor ? <PackageManager pkg={pkgFor} services={services ?? []} /> : null}
         </DialogContent>
       </Dialog>
 
@@ -638,6 +657,119 @@ function FormatManager({ serviceId }: { serviceId: string }) {
         <Button variant="outline" onClick={add}>
           <Plus className="size-4" /> Adicionar formato
         </Button>
+      </div>
+    </div>
+  );
+}
+
+function PackageManager({
+  pkg,
+  services,
+}: {
+  pkg: { id: string; name: string; days: number };
+  services: { id: string; name: string }[];
+}) {
+  const queryClient = useQueryClient();
+  const [days, setDays] = useState(String(pkg.days || 30));
+  const [svc, setSvc] = useState("");
+  const [qty, setQty] = useState("4");
+  const [interval, setInterval] = useState("7");
+  const { data: items } = useQuery({
+    queryKey: ["package-items", pkg.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("package_items")
+        .select("*, services:service_id(name)")
+        .eq("package_service_id", pkg.id);
+      if (error) throw error;
+      return data;
+    },
+  });
+  const refresh = () => queryClient.invalidateQueries({ queryKey: ["package-items", pkg.id] });
+
+  async function saveDays() {
+    const { error } = await supabase.from("services").update({ package_days: Math.max(1, Number(days) || 30) }).eq("id", pkg.id);
+    if (error) {
+      toast.error("Não foi possível salvar.");
+      return;
+    }
+    toast.success("Validade salva.");
+    queryClient.invalidateQueries({ queryKey: ["services-admin"] });
+  }
+  async function add() {
+    if (!svc) return;
+    const { error } = await supabase.from("package_items").upsert(
+      { package_service_id: pkg.id, service_id: svc, quantity: Math.max(1, Number(qty) || 1), interval_days: Math.max(0, Number(interval) || 0) },
+      { onConflict: "package_service_id,service_id" },
+    );
+    if (error) {
+      toast.error("Não foi possível adicionar.");
+      return;
+    }
+    setSvc("");
+    refresh();
+  }
+  async function update(id: string, patch: { quantity?: number; interval_days?: number }) {
+    const { error } = await supabase.from("package_items").update(patch).eq("id", id);
+    if (error) toast.error("Não foi possível salvar.");
+    refresh();
+  }
+  async function del(id: string) {
+    await supabase.from("package_items").delete().eq("id", id);
+    refresh();
+  }
+
+  return (
+    <div className="space-y-4 text-sm">
+      <p className="text-muted-foreground">
+        Diga o que vem neste pacote. Quando a cliente contratar, ela vê em "Meus pacotes" quantos procedimentos faltam.
+      </p>
+      <div className="flex items-end gap-2">
+        <div className="space-y-1">
+          <Label>Validade (dias)</Label>
+          <Input type="number" min={1} value={days} onChange={(e) => setDays(e.target.value)} className="w-28" />
+        </div>
+        <Button variant="outline" onClick={saveDays}>Salvar validade</Button>
+      </div>
+      <ul className="space-y-2">
+        {(items ?? []).map((i) => (
+          <li key={i.id} className="flex flex-wrap items-center gap-2 rounded-lg border border-border p-2">
+            <span className="min-w-0 flex-1 font-medium">{i.services?.name}</span>
+            <label className="flex items-center gap-1">
+              Qtd
+              <Input type="number" min={1} defaultValue={i.quantity} className="w-16" onBlur={(e) => update(i.id, { quantity: Math.max(1, Number(e.target.value) || 1) })} />
+            </label>
+            <label className="flex items-center gap-1">
+              a cada
+              <Input type="number" min={0} defaultValue={i.interval_days} className="w-16" onBlur={(e) => update(i.id, { interval_days: Math.max(0, Number(e.target.value) || 0) })} />
+              dias
+            </label>
+            <Button size="icon" variant="ghost" aria-label="Remover" onClick={() => del(i.id)}>
+              <Trash2 className="size-4" />
+            </Button>
+          </li>
+        ))}
+        {items?.length === 0 ? <li className="text-muted-foreground">Nenhum procedimento ainda. Sem itens, este serviço não é um pacote.</li> : null}
+      </ul>
+      <div className="flex flex-wrap items-end gap-2 rounded-lg bg-muted/60 p-3">
+        <div className="space-y-1">
+          <Label>Procedimento</Label>
+          <select value={svc} onChange={(e) => setSvc(e.target.value)} className="h-9 rounded-md border border-input bg-background px-2">
+            <option value="">Escolha…</option>
+            {services.filter((s) => s.id !== pkg.id).map((s) => (
+              <option key={s.id} value={s.id}>{s.name}</option>
+            ))}
+          </select>
+        </div>
+        <div className="space-y-1">
+          <Label>Qtd</Label>
+          <Input type="number" min={1} value={qty} onChange={(e) => setQty(e.target.value)} className="w-16" />
+        </div>
+        <div className="space-y-1">
+          <Label>A cada (dias)</Label>
+          <Input type="number" min={0} value={interval} onChange={(e) => setInterval(e.target.value)} className="w-20" />
+        </div>
+        <Button onClick={add}><Plus className="size-4" /> Adicionar</Button>
       </div>
     </div>
   );

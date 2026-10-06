@@ -20,7 +20,7 @@ export function themeVars(primary: string, accent: string): Record<string, strin
     v["--primary"] = primary;
     v["--sidebar-primary"] = primary;
     v["--ring"] = primary;
-    v["--gradient-hero"] = `linear-gradient(140deg, ${primary} 0%, color-mix(in oklch, ${primary} 70%, black) 55%, color-mix(in oklch, ${primary} 70%, ${accent || primary}) 100%)`;
+    v["--gradient-hero"] = primary;
   }
   if (accent) v["--accent"] = accent;
   return v;
@@ -37,6 +37,15 @@ export function ThemeApplier() {
     for (const k of ["--primary", "--sidebar-primary", "--ring", "--gradient-hero", "--accent"]) root.style.removeProperty(k);
     for (const [k, val] of Object.entries(themeVars(data?.theme_primary ?? "", data?.theme_accent ?? ""))) root.style.setProperty(k, val);
   }, [data?.theme_primary, data?.theme_accent]);
+  useEffect(() => {
+    let el = document.getElementById("salon-mode-colors");
+    if (!el) {
+      el = document.createElement("style");
+      el.id = "salon-mode-colors";
+      document.head.appendChild(el);
+    }
+    el.textContent = modeCss(data ?? {});
+  }, [data?.theme_light_bg, data?.theme_light_fg, data?.theme_dark_bg, data?.theme_dark_fg]);
   return null;
 }
 
@@ -59,4 +68,24 @@ export function ThemeToggle({ className }: { className?: string }) {
       {dark ? <Sun className="size-5" /> : <Moon className="size-5" />}
     </button>
   );
+}
+
+type ModeColors = { theme_light_bg?: string; theme_light_fg?: string; theme_dark_bg?: string; theme_dark_fg?: string };
+
+function block(bg?: string, fg?: string) {
+  const r: string[] = [];
+  if (bg) {
+    r.push(`--background:${bg}`, `--card:color-mix(in oklch, ${bg} 92%, ${fg || "white"})`, `--popover:color-mix(in oklch, ${bg} 92%, ${fg || "white"})`, `--muted:color-mix(in oklch, ${bg} 88%, ${fg || "gray"})`, `--secondary:color-mix(in oklch, ${bg} 85%, ${fg || "gray"})`, `--border:color-mix(in oklch, ${bg} 80%, ${fg || "gray"})`, `--input:color-mix(in oklch, ${bg} 80%, ${fg || "gray"})`);
+  }
+  if (fg) {
+    r.push(`--foreground:${fg}`, `--card-foreground:${fg}`, `--popover-foreground:${fg}`, `--secondary-foreground:${fg}`, `--muted-foreground:color-mix(in oklch, ${fg} 65%, ${bg || "gray"})`);
+  }
+  return r.join(";");
+}
+
+/** CSS for custom day/night background and text colors. */
+export function modeCss(c: ModeColors) {
+  const light = block(c.theme_light_bg, c.theme_light_fg);
+  const dark = block(c.theme_dark_bg, c.theme_dark_fg);
+  return `${light ? `:root{${light}}` : ""}${dark ? `.dark{${dark}}` : ""}`;
 }

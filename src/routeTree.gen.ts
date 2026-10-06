@@ -17,6 +17,7 @@ import { Route as AuthenticatedBookingRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedCheckoutRouteImport } from './routes/_authenticated/checkout'
 import { Route as AuthenticatedConfirmationRouteImport } from './routes/_authenticated/confirmation'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedPacotesRouteImport } from './routes/_authenticated/pacotes'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedAdminCaixaRouteImport } from './routes/_authenticated/admin.caixa'
 import { Route as AuthenticatedAdminClientesRouteImport } from './routes/_authenticated/admin.clientes'
@@ -66,6 +67,11 @@ const AuthenticatedConfirmationRoute =
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPacotesRoute = AuthenticatedPacotesRouteImport.update({
+  id: '/pacotes',
+  path: '/pacotes',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
@@ -128,6 +134,7 @@ export interface FileRoutesByFullPath {
   '/checkout': typeof AuthenticatedCheckoutRoute
   '/confirmation': typeof AuthenticatedConfirmationRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/pacotes': typeof AuthenticatedPacotesRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/admin/caixa': typeof AuthenticatedAdminCaixaRoute
   '/admin/clientes': typeof AuthenticatedAdminClientesRoute
@@ -146,6 +153,7 @@ export interface FileRoutesByTo {
   '/checkout': typeof AuthenticatedCheckoutRoute
   '/confirmation': typeof AuthenticatedConfirmationRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/pacotes': typeof AuthenticatedPacotesRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/admin/caixa': typeof AuthenticatedAdminCaixaRoute
   '/admin/clientes': typeof AuthenticatedAdminClientesRoute
@@ -166,6 +174,7 @@ export interface FileRoutesById {
   '/_authenticated/checkout': typeof AuthenticatedCheckoutRoute
   '/_authenticated/confirmation': typeof AuthenticatedConfirmationRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/pacotes': typeof AuthenticatedPacotesRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/admin/caixa': typeof AuthenticatedAdminCaixaRoute
   '/_authenticated/admin/clientes': typeof AuthenticatedAdminClientesRoute
@@ -186,6 +195,7 @@ export interface FileRouteTypes {
     | '/checkout'
     | '/confirmation'
     | '/dashboard'
+    | '/pacotes'
     | '/profile'
     | '/admin/caixa'
     | '/admin/clientes'
@@ -204,6 +214,7 @@ export interface FileRouteTypes {
     | '/checkout'
     | '/confirmation'
     | '/dashboard'
+    | '/pacotes'
     | '/profile'
     | '/admin/caixa'
     | '/admin/clientes'
@@ -223,6 +234,7 @@ export interface FileRouteTypes {
     | '/_authenticated/checkout'
     | '/_authenticated/confirmation'
     | '/_authenticated/dashboard'
+    | '/_authenticated/pacotes'
     | '/_authenticated/profile'
     | '/_authenticated/admin/caixa'
     | '/_authenticated/admin/clientes'
@@ -300,6 +312,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/pacotes': {
+      id: '/_authenticated/pacotes'
+      path: '/pacotes'
+      fullPath: '/pacotes'
+      preLoaderRoute: typeof AuthenticatedPacotesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/profile': {
       id: '/_authenticated/profile'
       path: '/profile'
@@ -372,6 +391,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCheckoutRoute: typeof AuthenticatedCheckoutRoute
   AuthenticatedConfirmationRoute: typeof AuthenticatedConfirmationRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedPacotesRoute: typeof AuthenticatedPacotesRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedAdminCaixaRoute: typeof AuthenticatedAdminCaixaRoute
   AuthenticatedAdminClientesRoute: typeof AuthenticatedAdminClientesRoute
@@ -387,6 +407,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCheckoutRoute: AuthenticatedCheckoutRoute,
   AuthenticatedConfirmationRoute: AuthenticatedConfirmationRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedPacotesRoute: AuthenticatedPacotesRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedAdminCaixaRoute: AuthenticatedAdminCaixaRoute,
   AuthenticatedAdminClientesRoute: AuthenticatedAdminClientesRoute,

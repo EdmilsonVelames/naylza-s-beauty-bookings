@@ -22,9 +22,12 @@ export function useAppointments() {
   return useQuery({
     queryKey: ["appointments"],
     queryFn: async () => {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) return [];
       const { data, error } = await supabase
         .from("appointments")
         .select("*, services(name, price_cents, duration_min), professionals(name)")
+        .eq("user_id", u.user.id)
         .order("starts_at", { ascending: true });
       if (error) throw error;
       return data;
@@ -52,7 +55,7 @@ function Dashboard() {
   const recent = (data ?? [])
     .slice()
     .sort((a, b) => new Date(b.starts_at).getTime() - new Date(a.starts_at).getTime())
-    .slice(0, 5);
+    .slice(0, 1);
 
   return (
     <div className="space-y-8">
@@ -101,7 +104,7 @@ function Dashboard() {
 
       <section className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="font-display text-2xl">Agendamentos recentes</h2>
+          <h2 className="font-display text-2xl">Agendamento recente</h2>
           <Button asChild variant="ghost" size="sm">
             <Link to="/appointments">Ver todos</Link>
           </Button>

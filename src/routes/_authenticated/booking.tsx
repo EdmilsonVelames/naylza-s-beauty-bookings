@@ -36,6 +36,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { SalonImage } from "@/lib/images";
 import { PickCalendar, useDaysOff } from "@/components/ScheduleTools";
+import { activePackageFor, useClientPackages } from "@/lib/packages";
+import { useAuth } from "@/hooks/useAuth";
 
 export const Route = createFileRoute("/_authenticated/booking")({
   head: () => ({
@@ -221,6 +223,13 @@ function Booking() {
   const isDayOff = daysOff?.has(dayKey(day)) ?? false;
 
   const service = services?.find((s) => s.id === serviceId);
+  const { user: me } = useAuth();
+  const pkgOwner = isStaff ? (clientMode === "registered" ? clientId : "") : me?.id;
+  const { data: myPackages } = useClientPackages(pkgOwner);
+  const pkg = service ? activePackageFor(myPackages, service.id) : undefined;
+  const [usePkg, setUsePkg] = useState(true);
+  const pkgItem = pkg?.items.find((i) => i.serviceId === service?.id);
+  const usingPkg = Boolean(pkg && usePkg);
   const professional = professionals?.find((p) => p.id === professionalId);
   const ready = Boolean(service && professional && time && (serviceFormats.length === 0 || formatName));
 
@@ -267,10 +276,11 @@ function Booking() {
       service_id: service.id,
       professional_id: professional.id,
       starts_at: toIsoSlot(day, time),
-      total_cents: service.price_cents,
+      total_cents: usingPkg ? 0 : service.price_cents,
       paid_cents: 0,
-      payment_method: "salao",
+      payment_method: usingPkg ? "pacote" : "salao",
       status: "confirmed",
+      client_package_id: usingPkg && clientMode === "registered" ? pkg!.id : null,
     });
     setSaving(false);
     if (error) {
@@ -301,7 +311,8 @@ function Booking() {
     saveDraft({
       serviceId: service.id,
       serviceName: service.name,
-      priceCents: service.price_cents,
+      priceCents: usingPkg ? 0 : service.price_cents,
+      clientPackageId: usingPkg ? pkg!.id : undefined,
       professionalId: professional.id,
       professionalName: professional.name,
       startsAt: toIsoSlot(day, time),
@@ -577,11 +588,24 @@ function Booking() {
         )}
       </section>
 
+      {pkg && pkgItem ? (
+        <section className="surface-card space-y-2 border-primary/40 p-4">
+          <h2 className="font-display text-xl">{isStaff ? "A cliente tem pacote" : "Você tem pacote"}: {pkg.name}</h2>
+          <p className="text-sm text-muted-foreground">
+            Restam {pkgItem.remaining} de {pkgItem.quantity} {service?.name}. Usando o pacote, não há pagamento agora.
+          </p>
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={usePkg} onChange={(e) => setUsePkg(e.target.checked)} />
+            Usar o pacote neste agendamento
+          </label>
+        </section>
+      ) : null}
+
       <div className="surface-card sticky bottom-20 flex flex-wrap items-center justify-between gap-4 p-4 md:bottom-4">
         <div>
           <p className="text-sm text-muted-foreground">Sinal de 50%</p>
           <p className="font-display text-2xl">
-            {service ? formatBRL(Math.round(service.price_cents / 2)) : "—"}
+            {usingPkg ? "Pacote" : service ? formatBRL(Math.round(service.price_cents / 2)) : "—"}
           </p>
         </div>
         <Button disabled={!ready || !clientReady || saving} onClick={continueToCheckout}>

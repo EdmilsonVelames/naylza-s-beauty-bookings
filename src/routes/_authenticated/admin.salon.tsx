@@ -888,16 +888,34 @@ function ThemeColors() {
   const { data: settings } = useSalonSettings();
   const [primary, setPrimary] = useState("");
   const [accent, setAccent] = useState("");
+  const [logoColor, setLogoColor] = useState("");
+  const [lightBg, setLightBg] = useState("");
+  const [lightFg, setLightFg] = useState("");
+  const [darkBg, setDarkBg] = useState("");
+  const [darkFg, setDarkFg] = useState("");
   useEffect(() => {
     if (!settings) return;
     setPrimary(settings.theme_primary);
     setAccent(settings.theme_accent);
+    setLogoColor(settings.logo_color);
+    setLightBg(settings.theme_light_bg);
+    setLightFg(settings.theme_light_fg);
+    setDarkBg(settings.theme_dark_bg);
+    setDarkFg(settings.theme_dark_fg);
   }, [settings]);
 
   async function save() {
     const { error } = await supabase
       .from("salon_settings")
-      .update({ theme_primary: primary, theme_accent: accent, updated_at: new Date().toISOString() })
+      .update({
+        theme_primary: primary,
+        theme_accent: accent,
+        logo_color: logoColor,
+        theme_light_bg: lightBg,
+        theme_light_fg: lightFg,
+        theme_dark_bg: darkBg,
+        theme_dark_fg: darkFg,
+        updated_at: new Date().toISOString() })
       .eq("id", true);
     if (error) {
       toast.error("Não foi possível salvar as cores.");
@@ -931,6 +949,14 @@ function ThemeColors() {
           <input type="color" value={accent || "#e6c27a"} onChange={(e) => setAccent(e.target.value)} className="h-9 w-12 cursor-pointer rounded border border-border bg-transparent" />
         </label>
       </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <ColorField label="Cor do ícone" value={logoColor} fallback="#ffffff" onChange={setLogoColor} />
+        <div />
+        <ColorField label="Modo dia — fundo" value={lightBg} fallback="#faf6ef" onChange={setLightBg} />
+        <ColorField label="Modo dia — texto" value={lightFg} fallback="#3b2a24" onChange={setLightFg} />
+        <ColorField label="Modo noite — fundo" value={darkBg} fallback="#241a17" onChange={setDarkBg} />
+        <ColorField label="Modo noite — texto" value={darkFg} fallback="#f5efe6" onChange={setDarkFg} />
+      </div>
       <div className="rounded-xl border border-border p-4" style={themeVars(primary, accent) as React.CSSProperties}>
         <p className="mb-3 text-xs uppercase tracking-wide text-muted-foreground">Prévia</p>
         <div className="grid gap-3 sm:grid-cols-2">
@@ -947,5 +973,17 @@ function ThemeColors() {
       </div>
       <Button onClick={save}>Salvar cores</Button>
     </section>
+  );
+}
+
+function ColorField({ label, value, fallback, onChange }: { label: string; value: string; fallback: string; onChange: (v: string) => void }) {
+  return (
+    <label className="flex items-center gap-2 text-sm">
+      <input type="color" value={value || fallback} onChange={(e) => onChange(e.target.value)} className="h-9 w-12 cursor-pointer rounded border border-border bg-transparent" />
+      <span className="flex-1">{label}</span>
+      {value ? (
+        <button type="button" className="text-xs text-muted-foreground underline" onClick={() => onChange("")}>Padrão</button>
+      ) : <span className="text-xs text-muted-foreground">padrão</span>}
+    </label>
   );
 }
