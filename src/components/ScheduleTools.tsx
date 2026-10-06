@@ -49,20 +49,24 @@ export function useDaysOff(professionalId: string) {
     queryKey: ["days-off", professionalId],
     enabled: Boolean(professionalId),
     queryFn: async () => {
-      const [days, weekly] = await Promise.all([
+      const [days, weekly, on] = await Promise.all([
         supabase.from("professional_days_off").select("day").eq("professional_id", professionalId),
         supabase.from("professional_weekly_off").select("weekday").eq("professional_id", professionalId),
+        supabase.from("professional_days_on").select("day").eq("professional_id", professionalId),
       ]);
       if (days.error) throw days.error;
       if (weekly.error) throw weekly.error;
       const dates = new Set(days.data.map((d) => d.day));
       const weekdays = new Set(weekly.data.map((w) => w.weekday));
+      const daysOn = new Set((on.data ?? []).map((d) => d.day));
       return {
         dates,
         weekdays,
+        daysOn,
         /** yyyy-mm-dd is a day off (single date or weekly). */
         has: (k: string) => {
           if (dates.has(k)) return true;
+          if (daysOn.has(k)) return false;
           const [y, m, d] = k.split("-").map(Number);
           return weekdays.has(new Date(y!, m! - 1, d!).getDay());
         },
@@ -165,15 +169,45 @@ export function MonthCalendar({
   );
 }
 
-export function DayOffToggle({ professionalId, day }: { professionalId: string; day: Date }) {
+export function DayOffToggle({
+  professionalId,
+  day,
+  appointmentsCount = 0,
+}: {
+  professionalId: string;
+  day: Date;
+  appointmentsCount?: number;
+}) {
   const queryClient = useQueryClient();
   const { data: daysOff } = useDaysOff(professionalId);
   const k = dayKey(day);
   const off = daysOff?.dates.has(k) ?? false;
   const weeklyOff = daysOff?.weekdays.has(day.getDay()) ?? false;
+  const released = daysOff?.daysOn.has(k) ?? false;
   if (weeklyOff && !off) {
-    return <p className="text-sm text-muted-foreground">Folga fixa toda {WEEK_FULL[day.getDay()]}.</p>;
+    async function toggleRelease() {
+      const { error } = released
+        ? await supabase.from("professional_days_on").delete().eq("professional_id", professionalId).eq("day", k)
+        : await supabase.from("professional_days_on").insert({ professional_id: professionalId, day: k });
+      if (error) {
+        toast.error("Não foi possível salvar.");
+        return;
+      }
+      toast.success(released ? "Este dia voltou a ser folga." : "Dia liberado para agendamentos. As outras semanas continuam de folga.");
+      queryClient.invalidateQueries({ queryKey: ["days-off"] });
+    }
+    return (
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-sm text-muted-foreground">
+          {released ? `Folga fixa de ${WEEK_FULL[day.getDay()]}, mas este dia está liberado.` : `Folga fixa toda ${WEEK_FULL[day.getDay()]}.`}
+        </span>
+        <Button variant={released ? "outline" : "default"} onClick={toggleRelease}>
+          {released ? "Voltar a ser folga" : "Liberar só este dia"}
+        </Button>
+      </div>
+    );
   }
+  const closing = appointmentsCount > 0;
   async function toggle() {
     const { error } = off
       ? await supabase.from("professional_days_off").delete().eq("professional_id", professionalId).eq("day", k)
@@ -182,12 +216,20 @@ export function DayOffToggle({ professionalId, day }: { professionalId: string; 
       toast.error("Não foi possível salvar.");
       return;
     }
-    toast.success(off ? "Folga removida." : "Dia marcado como folga. Ninguém consegue agendar com ela nesse dia.");
+    toast.success(
+      off
+        ? "Dia aberto para agendamentos de novo."
+        : closing
+          ? "Agenda fechada para novos agendamentos. Os atendimentos já marcados continuam."
+          : "Dia marcado como folga. Ninguém consegue agendar com ela nesse dia.",
+    );
     queryClient.invalidateQueries({ queryKey: ["days-off"] });
   }
   return (
     <Button variant={off ? "default" : "outline"} onClick={toggle}>
-      {off ? "Remover folga deste dia" : "Marcar este dia como folga"}
+      {off
+        ? closing ? "Abrir agenda deste dia" : "Remover folga deste dia"
+        : closing ? "Fechar para novos agendamentos" : "Marcar este dia como folga"}
     </Button>
   );
 }
@@ -195,7 +237,7 @@ export function DayOffToggle({ professionalId, day }: { professionalId: string; 
 export function ProHoursEditor({
   professional,
 }: {
-  professional: { id: string; name: string; open_time: string | null; close_time: string | null; break_start: string | null; break_end: string | null };
+  professional: { id: string; name: string; open_time: string | null; close_time: string | null; break_start: string | null; break_end: string | null; allow_past_closing?: boolean | null };
 }) {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState("");
@@ -244,6 +286,30 @@ export function ProHoursEditor({
         <div className="space-y-1"><Label>Pausa início</Label><Input type="time" value={bs} onChange={(e) => setBs(e.target.value)} /></div>
         <div className="space-y-1"><Label>Pausa fim</Label><Input type="time" value={be} onChange={(e) => setBe(e.target.value)} /></div>
       </div>
+      <label className="flex flex-wrap items-center gap-2 text-sm">
+        <span>Liberar horários mesmo que o serviço termine depois do fechamento:</span>
+        <select
+          className="rounded-md border border-input bg-background px-2 py-1 text-sm"
+          value={professional.allow_past_closing == null ? "salon" : professional.allow_past_closing ? "yes" : "no"}
+          onChange={async (e) => {
+            const v = e.target.value;
+            const { error } = await supabase.rpc("set_professional_overtime", {
+              _professional_id: professional.id,
+              _value: (v === "salon" ? null : v === "yes") as boolean,
+            });
+            if (error) {
+              toast.error("Não foi possível salvar.");
+              return;
+            }
+            toast.success("Preferência salva.");
+            queryClient.invalidateQueries({ queryKey: ["professionals"] });
+          }}
+        >
+          <option value="salon">Igual ao salão</option>
+          <option value="yes">Sim</option>
+          <option value="no">Não</option>
+        </select>
+      </label>
       <div className="flex flex-wrap gap-2">
         <Button onClick={() => save()}>Salvar horário</Button>
         {own ? <Button variant="outline" onClick={() => save(true)}>Usar horário do salão</Button> : null}
