@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarDays, Home, Scissors, Sparkles, User2, Settings, Wallet, Users, Menu, LogOut, Percent } from "lucide-react";
+import { CalendarDays, Home, Scissors, Sparkles, User2, Settings, Wallet, Users, Menu, LogOut, Percent, Package } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { ThemeToggle } from "@/lib/theme";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -12,6 +12,7 @@ const links = [
   { to: "/dashboard", label: "Início", icon: Home },
   { to: "/booking", label: "Agendar", icon: Sparkles },
   { to: "/appointments", label: "Agendamentos", icon: CalendarDays },
+  { to: "/pacotes", label: "Meus pacotes", icon: Package },
   { to: "/profile", label: "Perfil", icon: User2 },
 ] as const;
 
