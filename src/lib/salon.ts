@@ -115,6 +115,12 @@ export function clearDraft() {
   sessionStorage.removeItem(KEY);
 }
 
+export function statusLabel(a: { status: string; paid_cents: number; total_cents: number }) {
+  if (a.status === "confirmed" && a.paid_cents <= 0) return "Confirmado (pagamento no salão)";
+  if (a.status === "confirmed") return "Confirmado (sinal pago)";
+  return STATUS_LABEL[a.status] ?? a.status;
+}
+
 export const STATUS_LABEL: Record<string, string> = {
   pending: "Aguardando pagamento",
   confirmed: "Confirmado (50% pago)",

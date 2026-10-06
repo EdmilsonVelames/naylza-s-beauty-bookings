@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
+import { THEME_PRESETS, themeVars } from "@/lib/theme";
 import { toast } from "sonner";
 import { Check, ImagePlus, Pencil, Plus, Trash2, X } from "lucide-react";
 import { SalonImage, uploadSalonImage } from "@/lib/images";
@@ -79,7 +80,8 @@ function AdminSalon() {
           <Values />
         </TabsContent>
         <TabsContent value="look" className="mt-6">
-          <Look />
+          <ThemeColors />
+          <div className="mt-6"><Look /></div>
         </TabsContent>
       </Tabs>
     </div>
@@ -878,5 +880,72 @@ function LogoImage() {
         </div>
       </div>
     </div>
+  );
+}
+
+function ThemeColors() {
+  const queryClient = useQueryClient();
+  const { data: settings } = useSalonSettings();
+  const [primary, setPrimary] = useState("");
+  const [accent, setAccent] = useState("");
+  useEffect(() => {
+    if (!settings) return;
+    setPrimary(settings.theme_primary);
+    setAccent(settings.theme_accent);
+  }, [settings]);
+
+  async function save() {
+    const { error } = await supabase
+      .from("salon_settings")
+      .update({ theme_primary: primary, theme_accent: accent, updated_at: new Date().toISOString() })
+      .eq("id", true);
+    if (error) {
+      toast.error("Não foi possível salvar as cores.");
+      return;
+    }
+    toast.success("Cores do site atualizadas.");
+    queryClient.invalidateQueries({ queryKey: ["salon-settings"] });
+  }
+
+  return (
+    <section className="surface-card space-y-4 p-5">
+      <div>
+        <h2 className="font-display text-2xl">Cores do site</h2>
+        <p className="text-sm text-muted-foreground">Escolha uma combinação pronta ou suas próprias cores. A prévia mostra como fica antes de salvar.</p>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {THEME_PRESETS.map((p) => (
+          <Button key={p.name} size="sm" variant="outline" onClick={() => { setPrimary(p.primary); setAccent(p.accent); }}>
+            <span className="mr-1 inline-block size-3 rounded-full border border-border" style={{ background: p.primary || "var(--primary)" }} />
+            {p.name}
+          </Button>
+        ))}
+      </div>
+      <div className="flex flex-wrap gap-6">
+        <label className="flex items-center gap-2 text-sm">
+          Cor principal
+          <input type="color" value={primary || "#8a2f3c"} onChange={(e) => setPrimary(e.target.value)} className="h-9 w-12 cursor-pointer rounded border border-border bg-transparent" />
+        </label>
+        <label className="flex items-center gap-2 text-sm">
+          Cor de destaque
+          <input type="color" value={accent || "#e6c27a"} onChange={(e) => setAccent(e.target.value)} className="h-9 w-12 cursor-pointer rounded border border-border bg-transparent" />
+        </label>
+      </div>
+      <div className="rounded-xl border border-border p-4" style={themeVars(primary, accent) as React.CSSProperties}>
+        <p className="mb-3 text-xs uppercase tracking-wide text-muted-foreground">Prévia</p>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="rounded-xl bg-hero p-4 text-primary-foreground">
+            <p className="font-display text-2xl">Salão Naylza Reis</p>
+            <p className="text-sm opacity-80">Beleza com hora marcada</p>
+          </div>
+          <div className="space-y-2 rounded-xl border border-border bg-card p-4">
+            <p className="font-medium">Manicure e Pedicure</p>
+            <span className="inline-block rounded-full bg-accent px-2 py-0.5 text-xs text-accent-foreground">Destaque</span>
+            <div><Button size="sm">Agendar</Button></div>
+          </div>
+        </div>
+      </div>
+      <Button onClick={save}>Salvar cores</Button>
+    </section>
   );
 }

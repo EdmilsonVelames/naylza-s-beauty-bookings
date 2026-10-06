@@ -28,6 +28,8 @@ export function useSalonSettings() {
         logo_image: data?.logo_image ?? "",
         deposit_required: data?.deposit_required ?? true,
         allow_past_closing: data?.allow_past_closing ?? true,
+        theme_primary: data?.theme_primary ?? "",
+        theme_accent: data?.theme_accent ?? "",
       };
     },
   });

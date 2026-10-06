@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { formatBRL, formatDateTime, STATUS_LABEL } from "@/lib/salon";
+import { formatBRL, formatDateTime, STATUS_LABEL, statusLabel } from "@/lib/salon";
 import { useAppointments } from "./dashboard";
 import { cn } from "@/lib/utils";
 
@@ -107,7 +107,7 @@ function Appointments() {
                     </p>
                   </div>
                   <Badge variant={a.status === "cancelled" ? "destructive" : "secondary"}>
-                    {STATUS_LABEL[a.status] ?? a.status}
+                    {statusLabel(a)}
                   </Badge>
                 </div>
 

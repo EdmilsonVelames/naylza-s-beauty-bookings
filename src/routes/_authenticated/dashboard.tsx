@@ -4,7 +4,7 @@ import { CalendarDays, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { formatBRL, formatDateTime, STATUS_LABEL } from "@/lib/salon";
+import { formatBRL, formatDateTime, STATUS_LABEL, statusLabel } from "@/lib/salon";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -124,7 +124,7 @@ function Dashboard() {
                   </p>
                 </div>
                 <Badge variant={a.status === "cancelled" ? "destructive" : "secondary"}>
-                  {STATUS_LABEL[a.status] ?? a.status}
+                  {statusLabel(a)}
                 </Badge>
                 <span className="font-medium">{formatBRL(a.total_cents)}</span>
               </li>

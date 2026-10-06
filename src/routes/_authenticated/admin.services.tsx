@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { ImagePlus, Pencil, Plus, Shapes, Trash2 } from "lucide-react";
+import { ImagePlus, Pencil, Plus, Shapes, Trash2, ChevronUp, ChevronDown } from "lucide-react";
 import { SalonImage, uploadSalonImage } from "@/lib/images";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -398,6 +398,22 @@ function CategoryManager() {
     refresh();
   }
 
+  async function move(index: number, dir: -1 | 1) {
+    const list = [...(cats ?? [])];
+    const j = index + dir;
+    if (j < 0 || j >= list.length) return;
+    [list[index], list[j]] = [list[j]!, list[index]!];
+    const results = await Promise.all(
+      list.map((c, i) => supabase.from("service_categories").update({ position: i + 1 }).eq("id", c.id)),
+    );
+    if (results.some((r) => r.error)) {
+      toast.error("Não foi possível mudar a ordem.");
+      return;
+    }
+    refresh();
+    queryClient.invalidateQueries({ queryKey: ["service-categories"] });
+  }
+
   async function remove(id: string) {
     const { error } = await supabase.from("service_categories").delete().eq("id", id);
     if (error) {
@@ -412,8 +428,16 @@ function CategoryManager() {
     <section className="surface-card space-y-4 p-5">
       <h2 className="font-display text-2xl">Categorias</h2>
       <ul className="space-y-2">
-        {(cats ?? []).map((c) => (
+        {(cats ?? []).map((c, i) => (
           <li key={c.id} className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-col">
+              <Button size="icon" variant="ghost" className="size-6" aria-label="Subir" disabled={i === 0} onClick={() => move(i, -1)}>
+                <ChevronUp className="size-4" />
+              </Button>
+              <Button size="icon" variant="ghost" className="size-6" aria-label="Descer" disabled={i === (cats?.length ?? 0) - 1} onClick={() => move(i, 1)}>
+                <ChevronDown className="size-4" />
+              </Button>
+            </div>
             <Input
               className="max-w-xs"
               aria-label="Nome da categoria"

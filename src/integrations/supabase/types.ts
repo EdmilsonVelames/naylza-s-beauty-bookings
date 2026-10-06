@@ -233,6 +233,29 @@ export type Database = {
           },
         ]
       }
+      professional_days_on: {
+        Row: {
+          day: string
+          professional_id: string
+        }
+        Insert: {
+          day: string
+          professional_id: string
+        }
+        Update: {
+          day?: string
+          professional_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "professional_days_on_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "professionals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       professional_services: {
         Row: {
           professional_id: string
@@ -289,6 +312,7 @@ export type Database = {
       professionals: {
         Row: {
           active: boolean
+          allow_past_closing: boolean | null
           break_end: string | null
           break_start: string | null
           close_time: string | null
@@ -301,6 +325,7 @@ export type Database = {
         }
         Insert: {
           active?: boolean
+          allow_past_closing?: boolean | null
           break_end?: string | null
           break_start?: string | null
           close_time?: string | null
@@ -313,6 +338,7 @@ export type Database = {
         }
         Update: {
           active?: boolean
+          allow_past_closing?: boolean | null
           break_end?: string | null
           break_start?: string | null
           close_time?: string | null
@@ -386,6 +412,8 @@ export type Database = {
           logo_image: string
           open_time: string
           slot_minutes: number
+          theme_accent: string
+          theme_primary: string
           updated_at: string
         }
         Insert: {
@@ -400,6 +428,8 @@ export type Database = {
           logo_image?: string
           open_time?: string
           slot_minutes?: number
+          theme_accent?: string
+          theme_primary?: string
           updated_at?: string
         }
         Update: {
@@ -414,6 +444,8 @@ export type Database = {
           logo_image?: string
           open_time?: string
           slot_minutes?: number
+          theme_accent?: string
+          theme_primary?: string
           updated_at?: string
         }
         Relationships: []
@@ -585,6 +617,10 @@ export type Database = {
           _open: string
           _professional_id: string
         }
+        Returns: undefined
+      }
+      set_professional_overtime: {
+        Args: { _professional_id: string; _value: boolean }
         Returns: undefined
       }
     }

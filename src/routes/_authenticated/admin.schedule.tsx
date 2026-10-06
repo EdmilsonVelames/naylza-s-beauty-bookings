@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Lock } from "lucide-react";
+import { Lock, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useIsAdmin, useMyProfessional } from "@/components/AppShell";
@@ -106,6 +106,18 @@ function AdminSchedule() {
     },
   });
 
+  async function deleteAppointment(id: string, label: string) {
+    if (!window.confirm(`Excluir o agendamento de ${label}? Os pagamentos ligados a ele também serão apagados.`)) return;
+    await supabase.from("payments").delete().eq("appointment_id", id);
+    const { error } = await supabase.from("appointments").delete().eq("id", id);
+    if (error) {
+      toast.error("Não foi possível excluir.");
+      return;
+    }
+    toast.success("Agendamento excluído.");
+    queryClient.invalidateQueries();
+  }
+
   async function toggleBlock(time: string) {
     const iso = toIsoSlot(day, time);
     const existing = dayData?.blocks.find(
@@ -151,7 +163,7 @@ function AdminSchedule() {
       </div>
 
       <PendingDeposits />
-      <ConfirmedList professionals={professionals ?? []} />
+      <ConfirmedList professionals={professionals ?? []} onDelete={isAdmin ? deleteAppointment : undefined} />
 
       <h2 className="font-display text-2xl">Horários por profissional</h2>
       <div className="flex flex-wrap gap-2">
@@ -177,7 +189,7 @@ function AdminSchedule() {
       <MonthCalendar professionalId={activeProfessional} day={day} onSelect={setDay} />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="font-display text-xl capitalize">{formatDayLabel(day)}</p>
-        {activeProfessional ? <DayOffToggle professionalId={activeProfessional} day={day} /> : null}
+        {activeProfessional ? <DayOffToggle professionalId={activeProfessional} day={day} appointmentsCount={dayData?.appointments.length ?? 0} /> : null}
       </div>
 
       <section className="space-y-3">
@@ -231,7 +243,10 @@ function AdminSchedule() {
                   })}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="font-medium">{a.services?.name}</p>
+                  <p className="font-medium">
+                    {a.services?.name}
+                    {a.format_name ? <span className="text-muted-foreground"> · Formato: {a.format_name}</span> : null}
+                  </p>
                   <p className="text-sm text-muted-foreground">
                     {a.clientName}
                     {a.clientPhone ? ` · ${a.clientPhone}` : " · sem telefone"}
@@ -240,6 +255,11 @@ function AdminSchedule() {
                 <span className="text-sm text-muted-foreground">
                   Pago {formatBRL(a.paid_cents)} de {formatBRL(a.total_cents)}
                 </span>
+                {isAdmin ? (
+                  <Button size="icon" variant="ghost" aria-label="Excluir agendamento" onClick={() => deleteAppointment(a.id, a.clientName)}>
+                    <Trash2 className="size-4" />
+                  </Button>
+                ) : null}
               </li>
             ))}
           </ul>
@@ -249,7 +269,13 @@ function AdminSchedule() {
   );
 }
 
-function ConfirmedList({ professionals }: { professionals: { id: string; name: string }[] }) {
+function ConfirmedList({
+  professionals,
+  onDelete,
+}: {
+  professionals: { id: string; name: string }[];
+  onDelete?: ((id: string, label: string) => void) | undefined;
+}) {
   const [pro, setPro] = useState("");
   const { data = [], isLoading } = useQuery({
     queryKey: ["admin-confirmed"],
@@ -259,7 +285,7 @@ function ConfirmedList({ professionals }: { professionals: { id: string; name: s
       const [appts, profs] = await Promise.all([
         supabase
           .from("appointments")
-          .select("id, user_id, professional_id, starts_at, total_cents, paid_cents, status, services(name, duration_min), professionals(name)")
+          .select("id, user_id, professional_id, starts_at, total_cents, paid_cents, status, format_name, guest_name, guest_phone, services(name, duration_min), professionals(name)")
           .in("status", ["confirmed", "paid"])
           .gte("starts_at", start.toISOString())
           .order("starts_at"),
@@ -323,16 +349,23 @@ function ConfirmedList({ professionals }: { professionals: { id: string; name: s
                       </span>
                       <div className="min-w-0 flex-1">
                         <p className="font-medium">
-                          {a.services?.name} <span className="text-muted-foreground">· {a.professionals?.name}</span>
+                          {a.services?.name}
+                          {a.format_name ? <span className="text-muted-foreground"> · Formato: {a.format_name}</span> : null}{" "}
+                          <span className="text-muted-foreground">· {a.professionals?.name}</span>
                         </p>
                         <p className="text-sm text-muted-foreground">
-                          {a.client?.full_name || a.client?.email || "Cliente"}
-                          {a.client?.phone ? ` · ${a.client.phone}` : ""}
+                          {a.guest_name || a.client?.full_name || a.client?.email || "Cliente"}
+                          {a.guest_phone || a.client?.phone ? ` · ${a.guest_phone || a.client?.phone}` : ""}
                         </p>
                       </div>
                       <span className={cn("text-sm", rest > 0 ? "text-muted-foreground" : "text-primary")}>
                         {rest > 0 ? `Falta ${formatBRL(rest)}` : "Totalmente pago"}
                       </span>
+                      {onDelete ? (
+                        <Button size="icon" variant="ghost" aria-label="Excluir agendamento" onClick={() => onDelete(a.id, a.guest_name || a.client?.full_name || "Cliente")}>
+                          <Trash2 className="size-4" />
+                        </Button>
+                      ) : null}
                     </li>
                   );
                 })}
@@ -363,7 +396,7 @@ export function PendingDeposits() {
       const [appts, profs] = await Promise.all([
         supabase
           .from("appointments")
-          .select("id, user_id, starts_at, total_cents, guest_name, services(name), professionals(name)")
+          .select("id, user_id, starts_at, total_cents, guest_name, format_name, services(name), professionals(name)")
           .eq("status", "pending")
           .gte("starts_at", new Date().toISOString())
           .order("starts_at"),
@@ -404,7 +437,9 @@ export function PendingDeposits() {
           <li key={a.id} className="surface-card flex flex-wrap items-center gap-3 p-3">
             <div className="min-w-0 flex-1">
               <p className="font-medium">
-                {a.services?.name} <span className="text-muted-foreground">· {a.professionals?.name}</span>
+                {a.services?.name}
+                {a.format_name ? <span className="text-muted-foreground"> · Formato: {a.format_name}</span> : null}{" "}
+                <span className="text-muted-foreground">· {a.professionals?.name}</span>
               </p>
               <p className="text-sm text-muted-foreground">
                 {new Date(a.starts_at).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })} ·{" "}

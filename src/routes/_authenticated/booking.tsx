@@ -224,8 +224,21 @@ function Booking() {
   const professional = professionals?.find((p) => p.id === professionalId);
   const ready = Boolean(service && professional && time && (serviceFormats.length === 0 || formatName));
 
+  const { data: myPhone, isLoading: loadingPhone } = useQuery({
+    queryKey: ["my-phone"],
+    enabled: !isStaff,
+    queryFn: async () => {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) return "";
+      const { data } = await supabase.from("profiles").select("phone").eq("id", u.user.id).maybeSingle();
+      return data?.phone ?? "";
+    },
+  });
+  const needsPhone = !isStaff && !loadingPhone && (myPhone ?? "").replace(/\D/g, "").length < 10;
+
   const clientReady =
-    !isStaff || (clientMode === "registered" ? Boolean(clientId) : guestName.trim().length > 1);
+    !needsPhone &&
+    (!isStaff || (clientMode === "registered" ? Boolean(clientId) : guestName.trim().length > 1));
 
   async function createForClient() {
     if (!service || !professional || !time) return;
@@ -305,6 +318,16 @@ function Booking() {
           Reserve seu horário confirmando 50% do valor.
         </p>
       </div>
+
+      {needsPhone ? (
+        <section className="surface-card space-y-3 border-destructive/40 p-4">
+          <h2 className="font-display text-2xl">Falta seu telefone</h2>
+          <p className="text-sm text-muted-foreground">
+            Para agendar, cadastre seu celular com DDD no Perfil. Usamos para lembrar você do horário.
+          </p>
+          <Button onClick={() => navigate({ to: "/profile" })}>Ir para o Perfil</Button>
+        </section>
+      ) : null}
 
       {isStaff ? (
         <section className="surface-card space-y-3 p-4">
@@ -522,7 +545,7 @@ function Booking() {
               {slots.map((h) => {
                 const ts = new Date(toIsoSlot(day, h)).getTime();
                 const duration = service.duration_min;
-                const fitsInDay = (hours?.allow_past_closing ?? true) || minutesOf(h) + duration <= closeMinutes;
+                const fitsInDay = (professional?.allow_past_closing ?? hours?.allow_past_closing ?? true) || minutesOf(h) + duration <= closeMinutes;
                 const taken = overlaps(ts, duration, busy ?? []);
                 const disabled = isDayOff || taken || ts < Date.now() || !fitsInDay;
                 return (
