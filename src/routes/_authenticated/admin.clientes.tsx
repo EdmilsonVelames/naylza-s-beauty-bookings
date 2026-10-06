@@ -10,7 +10,7 @@ import { useIsStaff } from "@/components/AppShell";
 import { useSalonSettings } from "@/hooks/useSalonSettings";
 import { useServerFn } from "@tanstack/react-start";
 import { PasswordInput } from "@/components/PasswordInput";
-import { adminDeleteClient, adminUpdateClient } from "@/lib/clients.functions";
+import { adminDeleteClient, adminUpdateClient, staffCreateClient } from "@/lib/clients.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/clientes")({
   head: () => ({
@@ -114,6 +114,7 @@ function Clientes() {
         <p className="mt-1 text-muted-foreground">Histórico, preferências e observações.</p>
       </div>
       <DepositSettings />
+      <NewClient onCreated={() => queryClient.invalidateQueries({ queryKey: ["clientes"] })} />
       <Input
         placeholder="Buscar por nome, telefone ou e-mail"
         value={search}
@@ -331,5 +332,55 @@ function ClientDepositSelect({ userId }: { userId: string }) {
         <option value="off">Não exigir</option>
       </select>
     </label>
+  );
+}
+
+function NewClient({ onCreated }: { onCreated: () => void }) {
+  const create = useServerFn(staffCreateClient);
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [busy, setBusy] = useState(false);
+  async function submit() {
+    if (name.trim().length < 2) {
+      toast.error("Digite o nome da cliente.");
+      return;
+    }
+    setBusy(true);
+    try {
+      await create({ data: { name: name.trim(), phone: phone.trim(), email: email.trim() } });
+      toast.success("Cadastro criado.");
+      setName("");
+      setPhone("");
+      setEmail("");
+      setOpen(false);
+      onCreated();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Não foi possível criar o cadastro.");
+    } finally {
+      setBusy(false);
+    }
+  }
+  if (!open) {
+    return (
+      <Button variant="outline" onClick={() => setOpen(true)}>
+        + Novo cadastro de cliente
+      </Button>
+    );
+  }
+  return (
+    <section className="surface-card space-y-3 p-4">
+      <h2 className="font-display text-xl">Novo cadastro de cliente</h2>
+      <div className="grid gap-2 sm:grid-cols-3">
+        <Input placeholder="Nome" value={name} onChange={(e) => setName(e.target.value)} />
+        <Input placeholder="Telefone com DDD" value={phone} onChange={(e) => setPhone(e.target.value)} />
+        <Input type="email" placeholder="E-mail (opcional)" value={email} onChange={(e) => setEmail(e.target.value)} />
+      </div>
+      <div className="flex gap-2">
+        <Button disabled={busy} onClick={submit}>{busy ? "Criando…" : "Criar cadastro"}</Button>
+        <Button variant="ghost" onClick={() => setOpen(false)}>Cancelar</Button>
+      </div>
+    </section>
   );
 }

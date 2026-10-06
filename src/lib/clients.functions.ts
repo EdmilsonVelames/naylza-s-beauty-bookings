@@ -57,3 +57,36 @@ export const adminDeleteClient = createServerFn({ method: "POST" })
     if (error) throw new Error("Não foi possível excluir o cadastro.");
     return { ok: true };
   });
+
+const createSchema = z.object({
+  name: z.string().trim().min(2).max(100),
+  phone: z.string().trim().max(30).optional().default(""),
+  email: z.string().trim().max(255).optional().default(""),
+});
+
+/** Staff creates a client account (email optional — a private placeholder is used when empty). */
+export const staffCreateClient = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => createSchema.parse(d))
+  .handler(async ({ data, context }) => {
+    const { data: staff } = await context.supabase.rpc("is_staff", { _user_id: context.userId });
+    if (!staff) throw new Error("Apenas a equipe do salão pode fazer isso.");
+    const email = data.email.toLowerCase();
+    if (email && !z.string().email().safeParse(email).success) throw new Error("E-mail inválido.");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const digits = data.phone.replace(/\D/g, "") || "sem-telefone";
+    const finalEmail = email || `cliente-${digits}-${crypto.randomUUID().slice(0, 8)}@clientes.naylzareis.app`;
+    const { data: created, error } = await supabaseAdmin.auth.admin.createUser({
+      email: finalEmail,
+      password: crypto.randomUUID() + "Aa1!",
+      email_confirm: true,
+      user_metadata: { full_name: data.name },
+    });
+    if (error || !created.user) {
+      throw new Error(error?.message.includes("already") ? "Este e-mail já está cadastrado." : "Não foi possível criar o cadastro.");
+    }
+    await supabaseAdmin
+      .from("profiles")
+      .upsert({ id: created.user.id, full_name: data.name, phone: data.phone, email: email });
+    return { userId: created.user.id };
+  });

@@ -27,6 +27,7 @@ export function useSalonSettings() {
         logo_icon: data?.logo_icon ?? "scissors",
         logo_image: data?.logo_image ?? "",
         deposit_required: data?.deposit_required ?? true,
+        allow_past_closing: data?.allow_past_closing ?? true,
       };
     },
   });

@@ -375,6 +375,7 @@ export type Database = {
       }
       salon_settings: {
         Row: {
+          allow_past_closing: boolean
           break_end: string
           break_start: string
           close_time: string
@@ -388,6 +389,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          allow_past_closing?: boolean
           break_end?: string
           break_start?: string
           close_time?: string
@@ -401,6 +403,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          allow_past_closing?: boolean
           break_end?: string
           break_start?: string
           close_time?: string
