@@ -238,7 +238,7 @@ function Booking() {
 
   const clientReady =
     !needsPhone &&
-    (!isStaff || (clientMode === "registered" ? Boolean(clientId) : guestName.trim().length > 1);
+    (!isStaff || (clientMode === "registered" ? Boolean(clientId) : guestName.trim().length > 1));
 
   async function createForClient() {
     if (!service || !professional || !time) return;
