@@ -2,6 +2,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CalendarDays, Home, Scissors, Sparkles, User2, Settings, Wallet, Users, Menu, LogOut, Percent } from "lucide-react";
 import { useState, type ReactNode } from "react";
+import { ThemeToggle } from "@/lib/theme";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
 import { SALON_NAME } from "@/lib/salon";
@@ -92,6 +93,8 @@ export function AppShell({ children }: { children: ReactNode }) {
             </span>
             <span className="font-display text-lg leading-none font-semibold">{SALON_NAME}</span>
           </Link>
+          <div className="flex items-center gap-2">
+          <ThemeToggle />
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
               <button
@@ -129,6 +132,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               </nav>
             </SheetContent>
           </Sheet>
+          </div>
         </div>
       </header>
 
