@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/PasswordInput";
+import { useServerFn } from "@tanstack/react-start";
+import { changeMyPassword } from "@/lib/account.functions";
 
 export const Route = createFileRoute("/_authenticated/profile")({
   head: () => ({
@@ -118,6 +120,7 @@ function ChangePassword() {
   const [pwd, setPwd] = useState("");
   const [confirm, setConfirm] = useState("");
   const [busy, setBusy] = useState(false);
+  const changePwd = useServerFn(changeMyPassword);
 
   async function change() {
     if (pwd.length < 6) {
@@ -129,12 +132,14 @@ function ChangePassword() {
       return;
     }
     setBusy(true);
-    const { error } = await supabase.auth.updateUser({ password: pwd });
-    setBusy(false);
-    if (error) {
-      toast.error("Não foi possível trocar a senha.");
+    try {
+      await changePwd({ data: { password: pwd } });
+    } catch (e) {
+      setBusy(false);
+      toast.error(e instanceof Error && e.message ? e.message : "Não foi possível trocar a senha.");
       return;
     }
+    setBusy(false);
     setPwd("");
     setConfirm("");
     toast.success("Senha alterada.");

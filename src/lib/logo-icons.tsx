@@ -27,5 +27,5 @@ export function SalonLogoIcon({ className }: { className?: string }) {
   }
   const key = (data?.logo_icon ?? "scissors") as string;
   const entry = LOGO_ICONS[key as LogoIconKey] ?? LOGO_ICONS.scissors;
-  return <entry.Icon className={className} />;
+  return <entry.Icon className={className} style={data?.logo_color ? { color: data.logo_color } : undefined} />;
 }
