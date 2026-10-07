@@ -10,6 +10,7 @@ import { useIsStaff } from "@/components/AppShell";
 import { useSalonSettings } from "@/hooks/useSalonSettings";
 import { useServerFn } from "@tanstack/react-start";
 import { PasswordInput } from "@/components/PasswordInput";
+import { ClientPackagesEditor } from "@/components/ClientPackagesEditor";
 import { adminDeleteClient, adminUpdateClient, staffCreateClient } from "@/lib/clients.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/clientes")({
@@ -243,6 +244,7 @@ function ClientCard({
             <PasswordInput placeholder="Nova senha (deixe vazio para não trocar)" value={password} onChange={(e) => setPassword(e.target.value)} />
           </>
         ) : null}
+        {client.userId ? <ClientPackagesEditor userId={client.userId} /> : null}
         <Textarea placeholder="Observações" value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} />
         <div className="flex flex-wrap gap-2">
           <Button size="sm" disabled={busy} onClick={save}>

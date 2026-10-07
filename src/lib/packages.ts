@@ -13,6 +13,8 @@ export type PackageItemStatus = {
 export type ClientPackage = {
   id: string;
   name: string;
+  packageServiceId: string;
+  quantities: Record<string, number>;
   startsAt: string;
   expiresAt: string;
   expired: boolean;
@@ -36,7 +38,7 @@ export function useClientPackages(userId: string | null | undefined) {
     queryFn: async (): Promise<ClientPackage[]> => {
       const { data: cps, error } = await supabase
         .from("client_packages")
-        .select("id, starts_at, expires_at, package_service_id, services:package_service_id(name)")
+        .select("id, starts_at, expires_at, package_service_id, quantities, services:package_service_id(name)")
         .eq("user_id", userId!)
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -55,16 +57,18 @@ export function useClientPackages(userId: string | null | undefined) {
       ]);
       const now = Date.now();
       return cps.map((c) => {
+        const q = (c.quantities ?? {}) as Record<string, number>;
         const list = (items ?? [])
           .filter((i) => i.package_service_id === c.package_service_id)
           .map((i) => {
             const u = (used ?? []).filter((a) => a.client_package_id === c.id && a.service_id === i.service_id).length;
+            const qty = typeof q[i.service_id] === "number" ? q[i.service_id]! : i.quantity;
             return {
               serviceId: i.service_id,
               serviceName: i.services?.name ?? "",
-              quantity: i.quantity,
+              quantity: qty,
               used: u,
-              remaining: Math.max(i.quantity - u, 0),
+              remaining: Math.max(qty - u, 0),
               intervalDays: i.interval_days,
             };
           });
@@ -72,6 +76,8 @@ export function useClientPackages(userId: string | null | undefined) {
         return {
           id: c.id,
           name: c.services?.name ?? "Pacote",
+          packageServiceId: c.package_service_id,
+          quantities: q,
           startsAt: c.starts_at,
           expiresAt: c.expires_at,
           expired,

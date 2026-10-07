@@ -174,6 +174,7 @@ export type Database = {
           expires_at: string
           id: string
           package_service_id: string
+          quantities: Json
           starts_at: string
           user_id: string
         }
@@ -183,6 +184,7 @@ export type Database = {
           expires_at: string
           id?: string
           package_service_id: string
+          quantities?: Json
           starts_at?: string
           user_id: string
         }
@@ -192,6 +194,7 @@ export type Database = {
           expires_at?: string
           id?: string
           package_service_id?: string
+          quantities?: Json
           starts_at?: string
           user_id?: string
         }

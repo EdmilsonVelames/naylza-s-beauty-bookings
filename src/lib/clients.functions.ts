@@ -28,7 +28,11 @@ export const adminUpdateClient = createServerFn({ method: "POST" })
     if (data.password) authPatch.password = data.password;
     if (Object.keys(authPatch).length) {
       const { error } = await supabaseAdmin.auth.admin.updateUserById(data.userId, authPatch);
-      if (error) throw new Error(error.message.includes("already") ? "Este e-mail já está em uso." : "Não foi possível alterar o acesso.");
+      if (error) {
+        if (error.code === "weak_password" || /weak|pwned|guess/i.test(error.message))
+          throw new Error("Essa senha é muito fácil de adivinhar. Use uma senha mais forte, misturando letras, números e símbolos.");
+        throw new Error(error.message.includes("already") ? "Este e-mail já está em uso." : "Não foi possível alterar o acesso.");
+      }
     }
     const profilePatch: { phone?: string; email?: string } = {};
     if (data.phone !== undefined) profilePatch.phone = data.phone;

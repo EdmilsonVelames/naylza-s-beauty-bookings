@@ -134,6 +134,13 @@
       "when": 1791259397802,
       "tag": "0018_packages_and_theme_modes",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1791390752450,
+      "tag": "0019_client_package_quantities",
+      "breakpoints": true
     }
   ]
 }
