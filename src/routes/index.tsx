@@ -101,9 +101,9 @@ function AuthPage() {
 
   return (
     <div className="grid min-h-screen md:grid-cols-2">
-      <div className="relative hidden flex-col justify-between bg-hero p-12 md:flex">
+      <div className="relative hidden flex-col justify-between bg-hero p-12 text-primary-foreground md:flex">
         <div className="flex items-center gap-3">
-          <span className="flex size-10 items-center justify-center overflow-hidden rounded-full bg-current/15">
+          <span className="flex size-10 items-center justify-center overflow-hidden rounded-full bg-primary-foreground/15">
             <SalonLogoIcon className="size-5" />
           </span>
           <span className="font-display text-xl">{SALON_NAME}</span>
@@ -114,12 +114,12 @@ function AuthPage() {
             <br />
             do seu jeito.
           </h1>
-          <p className="mt-4 max-w-sm text-sm opacity-80">
+          <p className="mt-4 max-w-sm text-sm text-primary-foreground/80">
             Escolha o serviço, a profissional e o horário. Garanta sua reserva com 50% antecipado e
             pague o restante no dia.
           </p>
         </div>
-        <p className="text-xs opacity-60">Agenda online · Salão {SALON_NAME}</p>
+        <p className="text-xs text-primary-foreground/60">Agenda online · Salão {SALON_NAME}</p>
       </div>
 
       <div className="flex items-center justify-center bg-soft px-5 py-12">

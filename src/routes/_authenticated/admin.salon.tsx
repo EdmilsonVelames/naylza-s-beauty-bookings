@@ -816,7 +816,7 @@ function Look() {
               current === key && "ring-2 ring-primary",
             )}
           >
-            <span className="flex size-10 items-center justify-center rounded-full bg-hero">
+            <span className="flex size-10 items-center justify-center rounded-full bg-hero text-primary-foreground">
               <Icon className="size-5" />
             </span>
             {label}
@@ -861,7 +861,7 @@ function LogoImage() {
 
   return (
     <div className="flex flex-wrap items-center gap-4 rounded-xl border border-border p-4">
-      <span className="flex size-16 items-center justify-center overflow-hidden rounded-full bg-hero">
+      <span className="flex size-16 items-center justify-center overflow-hidden rounded-full bg-hero text-primary-foreground">
         {path ? <SalonImage path={path} alt="Logo do salão" className="size-full rounded-full" /> : <ImagePlus className="size-6" />}
       </span>
       <div className="space-y-2">
@@ -960,7 +960,7 @@ function ThemeColors() {
       <div className="rounded-xl border border-border p-4" style={themeVars(primary, accent) as React.CSSProperties}>
         <p className="mb-3 text-xs uppercase tracking-wide text-muted-foreground">Prévia</p>
         <div className="grid gap-3 sm:grid-cols-2">
-          <div className="rounded-xl bg-hero p-4">
+          <div className="rounded-xl bg-hero p-4 text-primary-foreground">
             <p className="font-display text-2xl">Salão Naylza Reis</p>
             <p className="text-sm opacity-80">Beleza com hora marcada</p>
           </div>
