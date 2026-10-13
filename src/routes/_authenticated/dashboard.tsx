@@ -74,7 +74,7 @@ function Dashboard() {
       </div>
 
       <section className="surface-card overflow-hidden">
-        <div className="bg-hero px-6 py-5">
+        <div className="bg-hero px-6 py-5 text-black dark:text-white">
           <p className="text-xs uppercase tracking-widest opacity-80">Próximo agendamento</p>
           {next ? (
             <>

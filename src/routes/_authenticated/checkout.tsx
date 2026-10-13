@@ -93,7 +93,7 @@ function Checkout() {
           <p className="text-xs uppercase tracking-wide text-muted-foreground">Valor total</p>
           <p className="mt-1 font-display text-3xl">{formatBRL(draft.priceCents)}</p>
         </div>
-        <div className="surface-card bg-hero p-5">
+        <div className="surface-card bg-hero p-5 text-primary-foreground">
           <p className="text-xs uppercase tracking-wide opacity-80">Antecipado ({percent}%)</p>
           <p className="mt-1 font-display text-3xl">{formatBRL(deposit)}</p>
         </div>

@@ -44,7 +44,7 @@ function Pacotes() {
         <ul className="space-y-4">
           {active.map((p) => (
             <li key={p.id} className="surface-card overflow-hidden">
-              <div className="bg-hero px-5 py-4">
+              <div className="bg-hero px-5 py-4 text-primary-foreground">
                 <p className="font-display text-2xl">{p.name}</p>
                 <p className="text-sm opacity-90">
                   Válido até {new Date(p.expiresAt).toLocaleDateString("pt-BR")}
