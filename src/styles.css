@@ -141,7 +141,9 @@
 }
 
 @utility bg-hero {
-  background-image: var(--gradient-hero);
+  background-image: linear-gradient(oklch(0 0 0 / 0.28), oklch(0 0 0 / 0.28)), var(--gradient-hero);
+  background-color: oklch(0.38 0.08 25);
+  color: oklch(0.985 0.008 85);
 }
 
 @utility bg-soft {
