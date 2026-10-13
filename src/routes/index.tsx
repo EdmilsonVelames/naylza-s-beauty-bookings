@@ -101,7 +101,7 @@ function AuthPage() {
 
   return (
     <div className="grid min-h-screen md:grid-cols-2">
-      <div className="relative hidden flex-col justify-between bg-hero p-12 text-primary-foreground md:flex">
+      <div className="relative hidden flex-col justify-between bg-hero p-12 md:flex">
         <div className="flex items-center gap-3">
           <span className="flex size-10 items-center justify-center overflow-hidden rounded-full bg-primary-foreground/15">
             <SalonLogoIcon className="size-5" />
