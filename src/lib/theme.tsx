@@ -20,7 +20,7 @@ export function themeVars(primary: string, accent: string): Record<string, strin
     v["--primary"] = primary;
     v["--sidebar-primary"] = primary;
     v["--ring"] = primary;
-    v["--gradient-hero"] = primary;
+    v["--gradient-hero"] = `linear-gradient(140deg, ${primary} 0%, color-mix(in oklch, ${primary} 70%, black) 100%)`;
   }
   if (accent) v["--accent"] = accent;
   return v;
