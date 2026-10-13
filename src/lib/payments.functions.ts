@@ -35,7 +35,7 @@ export const startDepositCheckout = createServerFn({ method: "POST" })
       .select("id, name, price_cents, duration_min")
       .eq("id", data.serviceId)
       .single();
-    if (serviceError || !service) throw new Error("Serviço não encontrado");
+    if (serviceError || !service) throw new Error("Serviço não encontrado.");
 
     // Confere se o horário ainda está livre, considerando a duração dos serviços.
     const startMs = new Date(data.startsAt).getTime();
@@ -104,7 +104,7 @@ export const startDepositCheckout = createServerFn({ method: "POST" })
         })
         .select("id")
         .single();
-      if (pkError || !pk) throw new Error("Não foi possível reservar o horário");
+      if (pkError || !pk) throw new Error("Não foi possível reservar o horário.");
       return { url: `/confirmation?id=${pk.id}`, appointmentId: pk.id };
     }
 
@@ -125,7 +125,7 @@ export const startDepositCheckout = createServerFn({ method: "POST" })
         })
         .select("id")
         .single();
-      if (freeError || !free) throw new Error("Não foi possível reservar o horário");
+      if (freeError || !free) throw new Error("Não foi possível reservar o horário.");
       return { url: `/confirmation?id=${free.id}`, appointmentId: free.id };
     }
 
@@ -144,7 +144,7 @@ export const startDepositCheckout = createServerFn({ method: "POST" })
       })
       .select("id")
       .single();
-    if (apptError || !appointment) throw new Error("Não foi possível reservar o horário");
+    if (apptError || !appointment) throw new Error("Não foi possível reservar o horário.");
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: payment, error: payError } = await supabaseAdmin
@@ -158,7 +158,7 @@ export const startDepositCheckout = createServerFn({ method: "POST" })
       })
       .select("id")
       .single();
-    if (payError || !payment) throw new Error("Não foi possível iniciar o pagamento");
+    if (payError || !payment) throw new Error("Não foi possível iniciar o pagamento.");
 
     const { createPreference } = await import("./mercadopago.server");
     const pref = await createPreference({
@@ -190,9 +190,9 @@ export const startBalanceCheckout = createServerFn({ method: "POST" })
       .select("id, total_cents, paid_cents, status, services(name)")
       .eq("id", data.appointmentId)
       .single();
-    if (error || !appointment) throw new Error("Agendamento não encontrado");
+    if (error || !appointment) throw new Error("Agendamento não encontrado.");
     const remaining = appointment.total_cents - appointment.paid_cents;
-    if (remaining <= 0) throw new Error("Este agendamento já está pago");
+    if (remaining <= 0) throw new Error("Este agendamento já está pago.");
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: payment, error: payError } = await supabaseAdmin
@@ -206,7 +206,7 @@ export const startBalanceCheckout = createServerFn({ method: "POST" })
       })
       .select("id")
       .single();
-    if (payError || !payment) throw new Error("Não foi possível iniciar o pagamento");
+    if (payError || !payment) throw new Error("Não foi possível iniciar o pagamento.");
 
     const { createPreference } = await import("./mercadopago.server");
     const pref = await createPreference({
