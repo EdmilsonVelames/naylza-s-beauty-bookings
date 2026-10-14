@@ -15,6 +15,7 @@ import { useIsAdmin } from "@/components/AppShell";
 import { useSalonSettings, depositFor } from "@/hooks/useSalonSettings";
 import { buildSlots, formatBRL, minutesOf } from "@/lib/salon";
 import { LOGO_ICONS } from "@/lib/logo-icons";
+import { FontSettings } from "@/lib/fonts";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/admin/salon")({
@@ -81,6 +82,7 @@ function AdminSalon() {
         </TabsContent>
         <TabsContent value="look" className="mt-6">
           <ThemeColors />
+          <div className="mt-6"><FontSettings /></div>
           <div className="mt-6"><Look /></div>
         </TabsContent>
       </Tabs>

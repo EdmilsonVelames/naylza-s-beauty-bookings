@@ -35,6 +35,9 @@ export function useSalonSettings() {
         theme_light_fg: data?.theme_light_fg ?? "",
         theme_dark_bg: data?.theme_dark_bg ?? "",
         theme_dark_fg: data?.theme_dark_fg ?? "",
+        font_body: data?.font_body ?? "",
+        font_display: data?.font_display ?? "",
+        font_scale: data?.font_scale ?? 100,
       };
     },
   });
