@@ -816,8 +816,8 @@ function Look() {
               current === key && "ring-2 ring-primary",
             )}
           >
-            <span className="flex size-10 items-center justify-center rounded-full bg-hero text-primary-foreground">
-              <Icon className="size-5" />
+            <span className="flex size-10 items-center justify-center rounded-full border border-border bg-white shadow-sm">
+              <Icon className="size-5" style={{ color: logoColor || "var(--primary)" }} />
             </span>
             {label}
           </button>
@@ -861,7 +861,7 @@ function LogoImage() {
 
   return (
     <div className="flex flex-wrap items-center gap-4 rounded-xl border border-border p-4">
-      <span className="flex size-16 items-center justify-center overflow-hidden rounded-full bg-hero text-primary-foreground">
+      <span className="flex size-16 items-center justify-center overflow-hidden rounded-full border border-border bg-white shadow-sm text-muted-foreground">
         {path ? <SalonImage path={path} alt="Logo do salão" className="size-full rounded-full" /> : <ImagePlus className="size-6" />}
       </span>
       <div className="space-y-2">
@@ -950,7 +950,7 @@ function ThemeColors() {
         </label>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
-        <ColorField label="Cor do ícone" value={logoColor} fallback="#ffffff" onChange={setLogoColor} />
+        <ColorField label="Cor do ícone (separada das cores do site)" value={logoColor} fallback="#8a2f3c" onChange={setLogoColor} />
         <div />
         <ColorField label="Modo dia — fundo" value={lightBg} fallback="#faf6ef" onChange={setLightBg} />
         <ColorField label="Modo dia — texto" value={lightFg} fallback="#3b2a24" onChange={setLightFg} />
