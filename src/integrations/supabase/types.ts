@@ -504,6 +504,9 @@ export type Database = {
           close_time: string
           deposit_percent: number
           deposit_required: boolean
+          font_body: string
+          font_display: string
+          font_scale: number
           id: boolean
           logo_color: string
           logo_icon: string
@@ -525,6 +528,9 @@ export type Database = {
           close_time?: string
           deposit_percent?: number
           deposit_required?: boolean
+          font_body?: string
+          font_display?: string
+          font_scale?: number
           id?: boolean
           logo_color?: string
           logo_icon?: string
@@ -546,6 +552,9 @@ export type Database = {
           close_time?: string
           deposit_percent?: number
           deposit_required?: boolean
+          font_body?: string
+          font_display?: string
+          font_scale?: number
           id?: boolean
           logo_color?: string
           logo_icon?: string

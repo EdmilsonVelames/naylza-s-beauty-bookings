@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 import { ThemeApplier } from "@/lib/theme";
+import { FontApplier } from "@/lib/fonts";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -139,6 +140,7 @@ function RootComponent() {
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
       <ThemeApplier />
+      <FontApplier />
       <Toaster richColors position="top-center" />
     </QueryClientProvider>
   );
