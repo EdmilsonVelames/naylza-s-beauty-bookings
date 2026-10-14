@@ -46,6 +46,10 @@ function AuthPage() {
   }, []);
 
   useEffect(() => {
+    if (/type=recovery/.test(window.location.hash)) {
+      window.location.replace(`/reset-password${window.location.hash}`);
+      return;
+    }
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) navigate({ to: "/dashboard", replace: true });
     });
