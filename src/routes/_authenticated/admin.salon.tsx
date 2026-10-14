@@ -787,6 +787,7 @@ function Look() {
   const queryClient = useQueryClient();
   const { data } = useSalonSettings();
   const current = data?.logo_icon ?? "scissors";
+  const logoColor = data?.logo_color ?? "";
   async function pick(key: string) {
     const { error } = await supabase.from("salon_settings").upsert({ id: true, logo_icon: key, logo_image: "" });
     if (error) {
