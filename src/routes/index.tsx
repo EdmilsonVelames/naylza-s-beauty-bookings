@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PasswordInput } from "@/components/PasswordInput";
 import { SALON_NAME } from "@/lib/salon";
 
 export const Route = createFileRoute("/")({
@@ -45,6 +46,10 @@ function AuthPage() {
   }, []);
 
   useEffect(() => {
+    if (/type=recovery/.test(window.location.hash)) {
+      window.location.replace(`/reset-password${window.location.hash}`);
+      return;
+    }
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) navigate({ to: "/dashboard", replace: true });
     });
@@ -103,7 +108,7 @@ function AuthPage() {
     <div className="grid min-h-screen md:grid-cols-2">
       <div className="relative hidden flex-col justify-between bg-hero p-12 text-primary-foreground dark:text-white md:flex">
         <div className="flex items-center gap-3">
-          <span className="flex size-10 items-center justify-center overflow-hidden rounded-full bg-primary-foreground/15">
+          <span className="flex size-10 items-center justify-center overflow-hidden rounded-full border border-border bg-white shadow-sm">
             <SalonLogoIcon className="size-5" />
           </span>
           <span className="font-display text-xl">{SALON_NAME}</span>
@@ -164,9 +169,8 @@ function AuthPage() {
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="password">Senha</Label>
-              <Input
+              <PasswordInput
                 id="password"
-                type="password"
                 name="password"
                 autoComplete="current-password"
                 value={password}
