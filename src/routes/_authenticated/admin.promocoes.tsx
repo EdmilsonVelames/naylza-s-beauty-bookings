@@ -27,7 +27,7 @@ export const Route = createFileRoute("/_authenticated/admin/promocoes")({
 });
 
 type Form = {
-  id?: string;
+  id?: string | undefined;
   title: string;
   description: string;
   badge_text: string;
@@ -111,12 +111,12 @@ function Promocoes() {
 
   async function save() {
     if (!form) return;
-    if (!form.title.trim()) return toast.error("Dê um nome para a promoção.");
+    if (!form.title.trim()) { toast.error("Dê um nome para a promoção."); return; }
     const raw = Number(form.value.replace(/\./g, "").replace(",", "."));
-    if (!Number.isFinite(raw) || raw < 0) return toast.error("Informe um valor de desconto válido.");
-    if (form.discount_type === "percent" && raw > 100) return toast.error("A porcentagem vai até 100%.");
+    if (!Number.isFinite(raw) || raw < 0) { toast.error("Informe um valor de desconto válido."); return; }
+    if (form.discount_type === "percent" && raw > 100) { toast.error("A porcentagem vai até 100%."); return; }
     if (form.starts_on && form.ends_on && form.ends_on < form.starts_on)
-      return toast.error("A data final precisa ser depois da inicial.");
+      { toast.error("A data final precisa ser depois da inicial."); return; }
     const row = {
       title: form.title.trim(),
       description: form.description.trim(),
@@ -137,7 +137,7 @@ function Promocoes() {
       ? await supabase.from("promotions").update(row).eq("id", form.id)
       : await supabase.from("promotions").insert(row);
     setSaving(false);
-    if (error) return toast.error("Não foi possível salvar a promoção.");
+    if (error) { toast.error("Não foi possível salvar a promoção."); return; }
     toast.success("Promoção salva.");
     setForm(null);
     refresh();
@@ -145,14 +145,14 @@ function Promocoes() {
 
   async function toggle(p: Promotion, active: boolean) {
     const { error } = await supabase.from("promotions").update({ active }).eq("id", p.id);
-    if (error) return toast.error("Não foi possível alterar.");
+    if (error) { toast.error("Não foi possível alterar."); return; }
     refresh();
   }
 
   async function remove(p: Promotion) {
     if (!confirm(`Excluir a promoção "${p.title}"?`)) return;
     const { error } = await supabase.from("promotions").delete().eq("id", p.id);
-    if (error) return toast.error("Não foi possível excluir.");
+    if (error) { toast.error("Não foi possível excluir."); return; }
     toast.success("Promoção excluída.");
     refresh();
   }
