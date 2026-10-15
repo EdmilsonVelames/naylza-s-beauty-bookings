@@ -203,14 +203,30 @@ function AdminServices() {
                   <TableBody>
                     {list.map((s, idx) => (
                       <TableRow key={s.id}>
-                        <TableCell>
-                          <p className="font-medium">{s.name}</p>
+                        <TableCell className={s.active ? "" : "opacity-50"}>
+                          <p className="font-medium">
+                            {s.name}
+                            {!s.active ? <span className="ml-2 text-xs text-muted-foreground">(oculto)</span> : null}
+                          </p>
                           <p className="text-sm text-muted-foreground">{s.description}</p>
                         </TableCell>
                         <TableCell>{s.duration_min} min</TableCell>
                         <TableCell>{formatBRL(s.price_cents)}</TableCell>
                         <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
+                          <div className="flex items-center justify-end gap-2">
+                            <label className="flex items-center gap-1.5 text-xs text-muted-foreground" title="Mostrar para as clientes">
+                              <Switch
+                                checked={s.active}
+                                onCheckedChange={async (v) => {
+                                  const { error } = await supabase.from("services").update({ active: v }).eq("id", s.id);
+                                  if (error) { toast.error("Não foi possível alterar."); return; }
+                                  toast.success(v ? "Serviço visível." : "Serviço oculto.");
+                                  queryClient.invalidateQueries({ queryKey: ["services-admin"] });
+                                  queryClient.invalidateQueries({ queryKey: ["services"] });
+                                }}
+                              />
+                              {s.active ? "Visível" : "Oculto"}
+                            </label>
                             <Button size="icon" variant="ghost" aria-label="Subir" title="Subir" disabled={idx === 0} onClick={() => move(list, idx, -1)}>
                               <ChevronUp className="size-4" />
                             </Button>
