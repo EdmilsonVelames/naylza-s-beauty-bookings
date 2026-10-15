@@ -219,7 +219,7 @@ function AdminServices() {
                                 checked={s.active}
                                 onCheckedChange={async (v) => {
                                   const { error } = await supabase.from("services").update({ active: v }).eq("id", s.id);
-                                  if (error) return toast.error("Não foi possível alterar.");
+                                  if (error) { toast.error("Não foi possível alterar."); return; }
                                   toast.success(v ? "Serviço visível." : "Serviço oculto.");
                                   queryClient.invalidateQueries({ queryKey: ["services-admin"] });
                                   queryClient.invalidateQueries({ queryKey: ["services"] });
