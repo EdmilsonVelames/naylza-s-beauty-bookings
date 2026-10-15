@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { Clock } from "lucide-react";
+import { Clock, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import {
@@ -79,6 +79,8 @@ function Booking() {
   const [saving, setSaving] = useState(false);
   const [formatName, setFormatName] = useState("");
   const [formatOpen, setFormatOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const norm = (t: string) => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 
   const { data: formats } = useQuery({
     queryKey: ["service-formats"],
@@ -386,7 +388,48 @@ function Booking() {
 
       <section className="space-y-3">
         <h2 className="font-display text-2xl">1. Serviço</h2>
-        {!categoryId ? (
+        <div className="relative sm:w-96">
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            className="pl-9"
+            placeholder="Buscar serviço…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+        {search.trim() ? (
+          <div className="grid gap-3 sm:grid-cols-2">
+            {(services ?? [])
+              .filter((s) => norm(s.name + " " + (s.description ?? "")).includes(norm(search.trim())))
+              .map((s) => (
+                <button
+                  key={s.id}
+                  onClick={() => {
+                    setSearch("");
+                    setCategoryId(s.category_id ?? "none");
+                    setServiceId(s.id);
+                    setTime("");
+                    setFormatName("");
+                    if ((formats ?? []).some((f) => f.service_id === s.id)) setFormatOpen(true);
+                    const links = (proServices ?? []).filter((l) => l.professional_id === professionalId);
+                    if (links.length && !links.some((l) => l.service_id === s.id)) setProfessionalId("");
+                  }}
+                  className="surface-card flex items-start justify-between gap-3 p-4 text-left transition-all hover:shadow-[var(--shadow-lift)]"
+                >
+                  <div>
+                    <p className="font-medium">{s.name}</p>
+                    <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <Clock className="size-3.5" /> {s.duration_min} min
+                    </p>
+                  </div>
+                  <span className="whitespace-nowrap font-display text-lg">{formatBRL(s.price_cents)}</span>
+                </button>
+              ))}
+            {!(services ?? []).some((s) => norm(s.name + " " + (s.description ?? "")).includes(norm(search.trim()))) ? (
+              <p className="text-sm text-muted-foreground">Nenhum serviço encontrado.</p>
+            ) : null}
+          </div>
+        ) : !categoryId ? (
           <div className="grid gap-3 sm:grid-cols-3">
             {[
               ...(categories ?? []).filter((c) => !c.hidden),
