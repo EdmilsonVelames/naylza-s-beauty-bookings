@@ -130,16 +130,19 @@ export type Database = {
       }
       client_deposit_overrides: {
         Row: {
+          percent: number | null
           required: boolean
           updated_at: string
           user_id: string
         }
         Insert: {
+          percent?: number | null
           required: boolean
           updated_at?: string
           user_id: string
         }
         Update: {
+          percent?: number | null
           required?: boolean
           updated_at?: string
           user_id?: string
@@ -645,6 +648,7 @@ export type Database = {
           image_url: string
           name: string
           package_days: number
+          position: number
           price_cents: number
         }
         Insert: {
@@ -658,6 +662,7 @@ export type Database = {
           image_url?: string
           name: string
           package_days?: number
+          position?: number
           price_cents?: number
         }
         Update: {
@@ -671,6 +676,7 @@ export type Database = {
           image_url?: string
           name?: string
           package_days?: number
+          position?: number
           price_cents?: number
         }
         Relationships: [
@@ -710,6 +716,7 @@ export type Database = {
         Args: { _appointment_id: string; _method: string }
         Returns: undefined
       }
+      deposit_percent_for: { Args: { _user_id: string }; Returns: number }
       deposit_required_for: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {

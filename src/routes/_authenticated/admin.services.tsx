@@ -71,7 +71,7 @@ function AdminServices() {
   const { data: services } = useQuery({
     queryKey: ["services-admin"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("services").select("*").order("name");
+      const { data, error } = await supabase.from("services").select("*").order("position").order("name");
       if (error) throw error;
       return data;
     },
@@ -90,6 +90,16 @@ function AdminServices() {
     },
   });
   const CATEGORIES = (cats ?? []).map((c) => ({ value: c.id, label: c.name, hidden: c.hidden }));
+
+  async function move(list: { id: string }[], idx: number, dir: number) {
+    const next = [...list];
+    const [item] = next.splice(idx, 1);
+    next.splice(idx + dir, 0, item!);
+    const res = await Promise.all(next.map((x, i) => supabase.from("services").update({ position: i + 1 }).eq("id", x.id)));
+    if (res.some((r) => r.error)) toast.error("Não foi possível mudar a ordem.");
+    queryClient.invalidateQueries({ queryKey: ["services-admin"] });
+    queryClient.invalidateQueries({ queryKey: ["services"] });
+  }
 
   async function save() {
     const payload = {
@@ -191,7 +201,7 @@ function AdminServices() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {list.map((s) => (
+                    {list.map((s, idx) => (
                       <TableRow key={s.id}>
                         <TableCell>
                           <p className="font-medium">{s.name}</p>
@@ -201,6 +211,12 @@ function AdminServices() {
                         <TableCell>{formatBRL(s.price_cents)}</TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
+                            <Button size="icon" variant="ghost" aria-label="Subir" title="Subir" disabled={idx === 0} onClick={() => move(list, idx, -1)}>
+                              <ChevronUp className="size-4" />
+                            </Button>
+                            <Button size="icon" variant="ghost" aria-label="Descer" title="Descer" disabled={idx === list.length - 1} onClick={() => move(list, idx, 1)}>
+                              <ChevronDown className="size-4" />
+                            </Button>
                             <Button
                               size="icon"
                               variant="ghost"

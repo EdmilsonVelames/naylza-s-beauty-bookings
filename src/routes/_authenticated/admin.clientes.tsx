@@ -265,9 +265,9 @@ function useDepositOverrides() {
   return useQuery({
     queryKey: ["deposit-overrides"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("client_deposit_overrides").select("user_id, required");
+      const { data, error } = await supabase.from("client_deposit_overrides").select("user_id, required, percent");
       if (error) throw error;
-      return new Map(data.map((o) => [o.user_id, o.required]));
+      return new Map(data.map((o) => [o.user_id, o]));
     },
   });
 }
@@ -306,19 +306,45 @@ function DepositSettings() {
 function ClientDepositSelect({ userId }: { userId: string }) {
   const queryClient = useQueryClient();
   const { data: overrides } = useDepositOverrides();
-  const current = overrides?.has(userId) ? (overrides.get(userId) ? "on" : "off") : "default";
+  const { data: settings } = useSalonSettings();
+  const ov = overrides?.get(userId);
+  const current = ov && (ov.percent == null || !ov.required) ? (ov.required ? "on" : "off") : "default";
+  const [pct, setPct] = useState<string | null>(null);
+  const pctValue = pct ?? (ov?.percent != null ? String(ov.percent) : "");
   async function change(v: string) {
     const { error } =
       v === "default"
         ? await supabase.from("client_deposit_overrides").delete().eq("user_id", userId)
         : await supabase
             .from("client_deposit_overrides")
-            .upsert({ user_id: userId, required: v === "on", updated_at: new Date().toISOString() });
+            .upsert({ user_id: userId, required: v === "on", percent: v === "on" ? ov?.percent ?? null : null, updated_at: new Date().toISOString() });
     if (error) {
       toast.error("Não foi possível salvar.");
       return;
     }
     toast.success("Pagamento antecipado atualizado para esta cliente.");
+    queryClient.invalidateQueries({ queryKey: ["deposit-overrides"] });
+  }
+  async function savePct() {
+    const raw = pctValue.trim();
+    const n = Math.round(Number(raw));
+    if (raw && (!Number.isFinite(n) || n < 0 || n > 100)) {
+      toast.error("Use uma porcentagem de 0 a 100.");
+      return;
+    }
+    const { error } = !raw
+      ? ov && current === "default"
+        ? await supabase.from("client_deposit_overrides").delete().eq("user_id", userId)
+        : await supabase.from("client_deposit_overrides").update({ percent: null }).eq("user_id", userId)
+      : await supabase
+          .from("client_deposit_overrides")
+          .upsert({ user_id: userId, required: true, percent: n, updated_at: new Date().toISOString() });
+    if (error) {
+      toast.error("Não foi possível salvar.");
+      return;
+    }
+    setPct(null);
+    toast.success(raw ? `Sinal de ${n}% para esta cliente.` : "Porcentagem igual a todas.");
     queryClient.invalidateQueries({ queryKey: ["deposit-overrides"] });
   }
   return (
@@ -333,6 +359,22 @@ function ClientDepositSelect({ userId }: { userId: string }) {
         <option value="on">Exigir</option>
         <option value="off">Não exigir</option>
       </select>
+      {current !== "off" ? (
+        <span className="flex items-center gap-1">
+          <span className="text-muted-foreground">Porcentagem:</span>
+          <Input
+            type="number"
+            min={0}
+            max={100}
+            className="h-8 w-20"
+            placeholder={String(settings?.deposit_percent ?? 50)}
+            value={pctValue}
+            onChange={(e) => setPct(e.target.value)}
+          />
+          <span>%</span>
+          <Button size="sm" variant="outline" onClick={savePct}>OK</Button>
+        </span>
+      ) : null}
     </label>
   );
 }

@@ -127,6 +127,7 @@ function Booking() {
         .from("services")
         .select("*, service_categories(hidden)")
         .eq("active", true)
+        .order("position")
         .order("name");
       if (error) throw error;
       return data.filter((s) => !s.service_categories?.hidden);
