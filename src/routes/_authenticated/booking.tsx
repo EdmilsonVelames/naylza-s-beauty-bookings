@@ -26,6 +26,7 @@ import {
   type Busy,
 } from "@/lib/salon";
 import { useSalonSettings } from "@/hooks/useSalonSettings";
+import { bestPrice } from "@/lib/promotions";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { useIsStaff } from "@/components/AppShell";
@@ -121,6 +122,28 @@ function Booking() {
       return data;
     },
   });
+
+  const { data: promos } = useQuery({
+    queryKey: ["promotions"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("promotions").select("*").eq("active", true);
+      if (error) throw error;
+      return data;
+    },
+  });
+  const priceOf = (s: { id: string; price_cents: number }, at?: string) => bestPrice(promos, s.id, s.price_cents, at);
+  const PriceTag = ({ s }: { s: { id: string; price_cents: number } }) => {
+    const b = priceOf(s);
+    return b.promo ? (
+      <span className="flex flex-col items-end whitespace-nowrap">
+        <span className="text-xs text-muted-foreground line-through">{formatBRL(s.price_cents)}</span>
+        <span className="font-display text-lg text-primary">{formatBRL(b.price)}</span>
+        <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">{b.promo.badge_text || "Promoção"}</span>
+      </span>
+    ) : (
+      <PriceTag s={s} />
+    );
+  };
 
   const { data: services } = useQuery({
     queryKey: ["services"],
@@ -279,7 +302,7 @@ function Booking() {
       service_id: service.id,
       professional_id: professional.id,
       starts_at: toIsoSlot(day, time),
-      total_cents: usingPkg ? 0 : service.price_cents,
+      total_cents: usingPkg ? 0 : priceOf(service, toIsoSlot(day, time)).price,
       paid_cents: 0,
       payment_method: usingPkg ? "pacote" : "salao",
       status: "confirmed",
@@ -314,7 +337,7 @@ function Booking() {
     saveDraft({
       serviceId: service.id,
       serviceName: service.name,
-      priceCents: usingPkg ? 0 : service.price_cents,
+      priceCents: usingPkg ? 0 : priceOf(service, toIsoSlot(day, time)).price,
       clientPackageId: usingPkg ? pkg!.id : undefined,
       professionalId: professional.id,
       professionalName: professional.name,
@@ -501,9 +524,7 @@ function Booking() {
                         <p className="font-medium">{s.name}</p>
                         <p className="text-sm text-muted-foreground">{s.description}</p>
                       </div>
-                      <span className="whitespace-nowrap font-display text-lg">
-                        {formatBRL(s.price_cents)}
-                      </span>
+                      <PriceTag s={s} />
                     </div>
                     <p className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
                       <Clock className="size-3.5" /> {s.duration_min} min
@@ -647,10 +668,13 @@ function Booking() {
 
       <div className="surface-card sticky bottom-20 flex flex-wrap items-center justify-between gap-4 p-4 md:bottom-4">
         <div>
-          <p className="text-sm text-muted-foreground">Sinal de 50%</p>
+          <p className="text-sm text-muted-foreground">Valor do serviço</p>
           <p className="font-display text-2xl">
-            {usingPkg ? "Pacote" : service ? formatBRL(Math.round(service.price_cents / 2)) : "—"}
+            {usingPkg ? "Pacote" : service ? formatBRL(priceOf(service, time ? toIsoSlot(day, time) : undefined).price) : "—"}
           </p>
+          {!usingPkg && service && time && priceOf(service, toIsoSlot(day, time)).promo ? (
+            <p className="text-xs text-primary">Promoção aplicada: {priceOf(service, toIsoSlot(day, time)).promo!.title}</p>
+          ) : null}
         </div>
         <Button disabled={!ready || !clientReady || saving} onClick={continueToCheckout}>
           {isStaff ? (saving ? "Salvando…" : "Criar agendamento") : "Continuar para pagamento"}
