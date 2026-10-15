@@ -60,6 +60,10 @@ export const startDepositCheckout = createServerFn({ method: "POST" })
     });
     if (conflict) throw new Error("Este horário acabou de ser reservado. Escolha outro.");
 
+    const { data: promos } = await supabase.from("promotions").select("*").eq("active", true);
+    const { bestPrice } = await import("@/lib/promotions");
+    service.price_cents = bestPrice(promos, service.id, service.price_cents, data.startsAt).price;
+
     const { data: pctData } = await supabase.rpc("deposit_percent_for", { _user_id: userId });
     const percent = typeof pctData === "number" ? pctData : 50;
     const deposit = Math.round((service.price_cents * percent) / 100);

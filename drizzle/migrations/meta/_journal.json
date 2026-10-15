@@ -155,6 +155,13 @@
       "when": 1792103493680,
       "tag": "0021_service_order_client_percent",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1792106550896,
+      "tag": "0022_create_promotions",
+      "breakpoints": true
     }
   ]
 }

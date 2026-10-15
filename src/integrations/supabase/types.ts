@@ -475,6 +475,63 @@ export type Database = {
         }
         Relationships: []
       }
+      promotions: {
+        Row: {
+          active: boolean
+          badge_text: string
+          color: string
+          created_at: string
+          description: string
+          discount_type: string
+          discount_value: number
+          end_time: string | null
+          ends_on: string | null
+          id: string
+          service_ids: string[]
+          show_banner: boolean
+          start_time: string | null
+          starts_on: string | null
+          title: string
+          weekdays: number[]
+        }
+        Insert: {
+          active?: boolean
+          badge_text?: string
+          color?: string
+          created_at?: string
+          description?: string
+          discount_type?: string
+          discount_value?: number
+          end_time?: string | null
+          ends_on?: string | null
+          id?: string
+          service_ids?: string[]
+          show_banner?: boolean
+          start_time?: string | null
+          starts_on?: string | null
+          title: string
+          weekdays?: number[]
+        }
+        Update: {
+          active?: boolean
+          badge_text?: string
+          color?: string
+          created_at?: string
+          description?: string
+          discount_type?: string
+          discount_value?: number
+          end_time?: string | null
+          ends_on?: string | null
+          id?: string
+          service_ids?: string[]
+          show_banner?: boolean
+          start_time?: string | null
+          starts_on?: string | null
+          title?: string
+          weekdays?: number[]
+        }
+        Relationships: []
+      }
       rooms: {
         Row: {
           active: boolean
