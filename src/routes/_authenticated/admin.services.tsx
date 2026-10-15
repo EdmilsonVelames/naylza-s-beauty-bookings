@@ -71,7 +71,7 @@ function AdminServices() {
   const { data: services } = useQuery({
     queryKey: ["services-admin"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("services").select("*").order("name");
+      const { data, error } = await supabase.from("services").select("*").order("position").order("name");
       if (error) throw error;
       return data;
     },

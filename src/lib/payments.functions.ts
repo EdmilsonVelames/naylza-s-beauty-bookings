@@ -20,7 +20,8 @@ export const getMyDepositRequired = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { data } = await context.supabase.rpc("deposit_required_for", { _user_id: context.userId });
-    return { required: data !== false };
+    const { data: pct } = await context.supabase.rpc("deposit_percent_for", { _user_id: context.userId });
+    return { required: data !== false, percent: typeof pct === "number" ? pct : null };
   });
 
 export const startDepositCheckout = createServerFn({ method: "POST" })
@@ -59,11 +60,8 @@ export const startDepositCheckout = createServerFn({ method: "POST" })
     });
     if (conflict) throw new Error("Este horário acabou de ser reservado. Escolha outro.");
 
-    const { data: settings } = await supabase
-      .from("salon_settings")
-      .select("deposit_percent")
-      .maybeSingle();
-    const percent = settings?.deposit_percent ?? 50;
+    const { data: pctData } = await supabase.rpc("deposit_percent_for", { _user_id: userId });
+    const percent = typeof pctData === "number" ? pctData : 50;
     const deposit = Math.round((service.price_cents * percent) / 100);
 
     // Libera reservas pendentes que expiraram nesse mesmo horário.
