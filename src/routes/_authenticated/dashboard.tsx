@@ -1,9 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { CalendarDays, Plus } from "lucide-react";
+import { CalendarDays, Plus, Tag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { describeDiscount, describeWhen, promoCurrent } from "@/lib/promotions";
 import { formatBRL, formatDateTime, STATUS_LABEL, statusLabel } from "@/lib/salon";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -46,6 +47,15 @@ function Dashboard() {
       return p?.full_name || (u.user.user_metadata?.["full_name"] as string) || "";
     },
   });
+  const { data: promos } = useQuery({
+    queryKey: ["promotions"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("promotions").select("*").eq("active", true);
+      if (error) throw error;
+      return data;
+    },
+  });
+  const banners = (promos ?? []).filter((p) => p.show_banner && promoCurrent(p));
   const firstName = (me ?? "").trim().split(/\s+/)[0] ?? "";
   const now = Date.now();
   const upcoming = (data ?? []).filter(
@@ -72,6 +82,22 @@ function Dashboard() {
           </Link>
         </Button>
       </div>
+
+      {banners.length ? (
+        <section className="grid gap-3 sm:grid-cols-2">
+          {banners.map((p) => (
+            <Link key={p.id} to="/booking" className="surface-card block border-primary/40 p-5 transition-all hover:shadow-[var(--shadow-lift)]">
+              <span className="inline-flex items-center gap-1 rounded-full bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">
+                <Tag className="size-3" /> {p.badge_text}
+              </span>
+              <p className="mt-2 font-display text-2xl">{p.title}</p>
+              <p className="text-sm font-medium text-primary">{describeDiscount(p)}</p>
+              {p.description ? <p className="mt-1 text-sm text-muted-foreground">{p.description}</p> : null}
+              {describeWhen(p) ? <p className="mt-1 text-xs text-muted-foreground">{describeWhen(p)}</p> : null}
+            </Link>
+          ))}
+        </section>
+      ) : null}
 
       <section className="surface-card overflow-hidden">
         <div className="bg-hero px-6 py-5 text-black dark:text-white">
