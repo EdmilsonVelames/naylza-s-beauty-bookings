@@ -23,6 +23,7 @@ import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedAdminCaixaRouteImport } from './routes/_authenticated/admin.caixa'
 import { Route as AuthenticatedAdminClientesRouteImport } from './routes/_authenticated/admin.clientes'
 import { Route as AuthenticatedAdminComissoesRouteImport } from './routes/_authenticated/admin.comissoes'
+import { Route as AuthenticatedAdminPaginaInicialRouteImport } from './routes/_authenticated/admin.pagina-inicial'
 import { Route as AuthenticatedAdminPromocoesRouteImport } from './routes/_authenticated/admin.promocoes'
 import { Route as AuthenticatedAdminSalonRouteImport } from './routes/_authenticated/admin.salon'
 import { Route as AuthenticatedAdminScheduleRouteImport } from './routes/_authenticated/admin.schedule'
@@ -103,6 +104,12 @@ const AuthenticatedAdminComissoesRoute =
     path: '/admin/comissoes',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminPaginaInicialRoute =
+  AuthenticatedAdminPaginaInicialRouteImport.update({
+    id: '/admin/pagina-inicial',
+    path: '/admin/pagina-inicial',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminPromocoesRoute =
   AuthenticatedAdminPromocoesRouteImport.update({
     id: '/admin/promocoes',
@@ -153,6 +160,7 @@ export interface FileRoutesByFullPath {
   '/admin/caixa': typeof AuthenticatedAdminCaixaRoute
   '/admin/clientes': typeof AuthenticatedAdminClientesRoute
   '/admin/comissoes': typeof AuthenticatedAdminComissoesRoute
+  '/admin/pagina-inicial': typeof AuthenticatedAdminPaginaInicialRoute
   '/admin/promocoes': typeof AuthenticatedAdminPromocoesRoute
   '/admin/salon': typeof AuthenticatedAdminSalonRoute
   '/admin/schedule': typeof AuthenticatedAdminScheduleRoute
@@ -174,6 +182,7 @@ export interface FileRoutesByTo {
   '/admin/caixa': typeof AuthenticatedAdminCaixaRoute
   '/admin/clientes': typeof AuthenticatedAdminClientesRoute
   '/admin/comissoes': typeof AuthenticatedAdminComissoesRoute
+  '/admin/pagina-inicial': typeof AuthenticatedAdminPaginaInicialRoute
   '/admin/promocoes': typeof AuthenticatedAdminPromocoesRoute
   '/admin/salon': typeof AuthenticatedAdminSalonRoute
   '/admin/schedule': typeof AuthenticatedAdminScheduleRoute
@@ -197,6 +206,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/caixa': typeof AuthenticatedAdminCaixaRoute
   '/_authenticated/admin/clientes': typeof AuthenticatedAdminClientesRoute
   '/_authenticated/admin/comissoes': typeof AuthenticatedAdminComissoesRoute
+  '/_authenticated/admin/pagina-inicial': typeof AuthenticatedAdminPaginaInicialRoute
   '/_authenticated/admin/promocoes': typeof AuthenticatedAdminPromocoesRoute
   '/_authenticated/admin/salon': typeof AuthenticatedAdminSalonRoute
   '/_authenticated/admin/schedule': typeof AuthenticatedAdminScheduleRoute
@@ -220,6 +230,7 @@ export interface FileRouteTypes {
     | '/admin/caixa'
     | '/admin/clientes'
     | '/admin/comissoes'
+    | '/admin/pagina-inicial'
     | '/admin/promocoes'
     | '/admin/salon'
     | '/admin/schedule'
@@ -241,6 +252,7 @@ export interface FileRouteTypes {
     | '/admin/caixa'
     | '/admin/clientes'
     | '/admin/comissoes'
+    | '/admin/pagina-inicial'
     | '/admin/promocoes'
     | '/admin/salon'
     | '/admin/schedule'
@@ -263,6 +275,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/caixa'
     | '/_authenticated/admin/clientes'
     | '/_authenticated/admin/comissoes'
+    | '/_authenticated/admin/pagina-inicial'
     | '/_authenticated/admin/promocoes'
     | '/_authenticated/admin/salon'
     | '/_authenticated/admin/schedule'
@@ -380,6 +393,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminComissoesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/pagina-inicial': {
+      id: '/_authenticated/admin/pagina-inicial'
+      path: '/admin/pagina-inicial'
+      fullPath: '/admin/pagina-inicial'
+      preLoaderRoute: typeof AuthenticatedAdminPaginaInicialRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/promocoes': {
       id: '/_authenticated/admin/promocoes'
       path: '/admin/promocoes'
@@ -436,6 +456,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminCaixaRoute: typeof AuthenticatedAdminCaixaRoute
   AuthenticatedAdminClientesRoute: typeof AuthenticatedAdminClientesRoute
   AuthenticatedAdminComissoesRoute: typeof AuthenticatedAdminComissoesRoute
+  AuthenticatedAdminPaginaInicialRoute: typeof AuthenticatedAdminPaginaInicialRoute
   AuthenticatedAdminPromocoesRoute: typeof AuthenticatedAdminPromocoesRoute
   AuthenticatedAdminSalonRoute: typeof AuthenticatedAdminSalonRoute
   AuthenticatedAdminScheduleRoute: typeof AuthenticatedAdminScheduleRoute
@@ -453,6 +474,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminCaixaRoute: AuthenticatedAdminCaixaRoute,
   AuthenticatedAdminClientesRoute: AuthenticatedAdminClientesRoute,
   AuthenticatedAdminComissoesRoute: AuthenticatedAdminComissoesRoute,
+  AuthenticatedAdminPaginaInicialRoute: AuthenticatedAdminPaginaInicialRoute,
   AuthenticatedAdminPromocoesRoute: AuthenticatedAdminPromocoesRoute,
   AuthenticatedAdminSalonRoute: AuthenticatedAdminSalonRoute,
   AuthenticatedAdminScheduleRoute: AuthenticatedAdminScheduleRoute,

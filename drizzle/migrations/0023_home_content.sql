@@ -1,0 +1,2 @@
+ALTER TABLE public.salon_settings ADD COLUMN IF NOT EXISTS home_content jsonb NOT NULL DEFAULT '{}'::jsonb;
+CREATE POLICY "salon home images public read" ON storage.objects FOR SELECT TO anon USING (bucket_id = 'salon-images' AND name LIKE 'home/%');

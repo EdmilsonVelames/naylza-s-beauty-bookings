@@ -27,7 +27,7 @@ export const FONT_OPTIONS = [
 const DEFAULT_BODY = "Karla";
 const DEFAULT_DISPLAY = "Cormorant Garamond";
 
-function ensureFontLoaded(family: string) {
+export function ensureFontLoaded(family: string) {
   if (!family) return;
   const id = `gf-${family.replace(/\s+/g, "-")}`;
   if (document.getElementById(id)) return;

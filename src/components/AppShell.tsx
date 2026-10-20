@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarDays, Home, Scissors, Sparkles, User2, Settings, Wallet, Users, Menu, LogOut, Percent, Package, Tag } from "lucide-react";
+import { CalendarDays, Home, Scissors, Sparkles, User2, Settings, Wallet, Users, Menu, LogOut, Percent, Package, Tag, LayoutTemplate } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { ThemeToggle } from "@/lib/theme";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -82,6 +82,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     items.push({ to: "/admin/salon", label: "Administração", icon: Settings });
     items.push({ to: "/admin/services", label: "Serviços", icon: Scissors });
     items.push({ to: "/admin/promocoes", label: "Promoções", icon: Tag });
+    items.push({ to: "/admin/pagina-inicial", label: "Página inicial", icon: LayoutTemplate });
     items.push({ to: "/admin/caixa", label: "Caixa", icon: Wallet });
   }
 

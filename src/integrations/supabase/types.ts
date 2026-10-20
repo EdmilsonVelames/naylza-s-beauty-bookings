@@ -567,6 +567,7 @@ export type Database = {
           font_body: string
           font_display: string
           font_scale: number
+          home_content: Json
           id: boolean
           logo_color: string
           logo_icon: string
@@ -591,6 +592,7 @@ export type Database = {
           font_body?: string
           font_display?: string
           font_scale?: number
+          home_content?: Json
           id?: boolean
           logo_color?: string
           logo_icon?: string
@@ -615,6 +617,7 @@ export type Database = {
           font_body?: string
           font_display?: string
           font_scale?: number
+          home_content?: Json
           id?: boolean
           logo_color?: string
           logo_icon?: string
