@@ -9,8 +9,8 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as EntrarRouteImport } from './routes/entrar'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedAppointmentsRouteImport } from './routes/_authenticated/appointments'
 import { Route as AuthenticatedBookingRouteImport } from './routes/_authenticated/booking'
@@ -29,13 +29,13 @@ import { Route as AuthenticatedAdminServicesRouteImport } from './routes/_authen
 import { Route as ApiPublicMercadopagoWebhookRouteImport } from './routes/api/public/mercadopago.webhook'
 import { Route as ApiPublicWhatsappRemindersRouteImport } from './routes/api/public/whatsapp.reminders'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EntrarRoute = EntrarRouteImport.update({
+  id: '/entrar',
+  path: '/entrar',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -134,7 +134,8 @@ const ApiPublicWhatsappRemindersRoute =
   } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
+  '/': typeof AuthenticatedRouteRouteWithChildren
+  '/entrar': typeof EntrarRoute
   '/reset-password': typeof ResetPasswordRoute
   '/appointments': typeof AuthenticatedAppointmentsRoute
   '/booking': typeof AuthenticatedBookingRoute
@@ -154,7 +155,8 @@ export interface FileRoutesByFullPath {
   '/api/public/whatsapp/reminders': typeof ApiPublicWhatsappRemindersRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
+  '/': typeof AuthenticatedRouteRouteWithChildren
+  '/entrar': typeof EntrarRoute
   '/reset-password': typeof ResetPasswordRoute
   '/appointments': typeof AuthenticatedAppointmentsRoute
   '/booking': typeof AuthenticatedBookingRoute
@@ -175,8 +177,8 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/entrar': typeof EntrarRoute
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/appointments': typeof AuthenticatedAppointmentsRoute
   '/_authenticated/booking': typeof AuthenticatedBookingRoute
@@ -199,6 +201,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/entrar'
     | '/reset-password'
     | '/appointments'
     | '/booking'
@@ -219,6 +222,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/entrar'
     | '/reset-password'
     | '/appointments'
     | '/booking'
@@ -238,8 +242,8 @@ export interface FileRouteTypes {
     | '/api/public/whatsapp/reminders'
   id:
     | '__root__'
-    | '/'
     | '/_authenticated'
+    | '/entrar'
     | '/reset-password'
     | '/_authenticated/appointments'
     | '/_authenticated/booking'
@@ -260,8 +264,8 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  EntrarRoute: typeof EntrarRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   ApiPublicMercadopagoWebhookRoute: typeof ApiPublicMercadopagoWebhookRoute
   ApiPublicWhatsappRemindersRoute: typeof ApiPublicWhatsappRemindersRoute
@@ -269,18 +273,18 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/_authenticated': {
       id: '/_authenticated'
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/entrar': {
+      id: '/entrar'
+      path: '/entrar'
+      fullPath: '/entrar'
+      preLoaderRoute: typeof EntrarRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset-password': {
@@ -443,8 +447,8 @@ const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  EntrarRoute: EntrarRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   ApiPublicMercadopagoWebhookRoute: ApiPublicMercadopagoWebhookRoute,
   ApiPublicWhatsappRemindersRoute: ApiPublicWhatsappRemindersRoute,
