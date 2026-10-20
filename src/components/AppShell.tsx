@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarDays, Home, Scissors, Sparkles, User2, Settings, Wallet, Users, Menu, LogOut, Percent, Package, Tag } from "lucide-react";
+import { CalendarDays, Home, Scissors, Sparkles, User2, Settings, Wallet, Users, Menu, LogOut, Percent, Package, Tag, LayoutTemplate } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { ThemeToggle } from "@/lib/theme";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
