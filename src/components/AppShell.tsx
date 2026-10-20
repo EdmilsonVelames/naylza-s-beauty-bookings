@@ -82,6 +82,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     items.push({ to: "/admin/salon", label: "Administração", icon: Settings });
     items.push({ to: "/admin/services", label: "Serviços", icon: Scissors });
     items.push({ to: "/admin/promocoes", label: "Promoções", icon: Tag });
+    items.push({ to: "/admin/pagina-inicial", label: "Página inicial", icon: LayoutTemplate });
     items.push({ to: "/admin/caixa", label: "Caixa", icon: Wallet });
   }
 
