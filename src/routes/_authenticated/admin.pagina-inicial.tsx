@@ -34,17 +34,19 @@ function move<T>(arr: T[], i: number, d: number) {
   const j = i + d;
   if (j < 0 || j >= arr.length) return arr;
   const n = [...arr];
-  [n[i], n[j]] = [n[j], n[i]];
+  const t = n[i] as T;
+  n[i] = n[j] as T;
+  n[j] = t;
   return n;
 }
 
 function ImagePicker({ value, onChange, label, aspect = "aspect-[4/5]", onRemove }: {
-  value: string; onChange: (v: string) => void; label?: string; aspect?: string; onRemove?: () => void;
+  value: string; onChange: (v: string) => void; label?: string; aspect?: string; onRemove?: (() => void) | undefined;
 }) {
   const [busy, setBusy] = useState(false);
   async function pick(file?: File) {
     if (!file) return;
-    if (file.size > MAX) return toast.error("A imagem deve ter no máximo 5 MB.");
+    if (file.size > MAX) { toast.error("A imagem deve ter no máximo 5 MB."); return; }
     setBusy(true);
     try {
       onChange(await uploadSalonImage(file, "home"));
