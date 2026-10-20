@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/PasswordInput";
 import { SALON_NAME } from "@/lib/salon";
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/entrar")({
   head: () => ({
     meta: [
       { title: "Entrar — Salão Naylza Reis" },

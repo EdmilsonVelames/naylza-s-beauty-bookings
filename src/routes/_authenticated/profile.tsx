@@ -73,7 +73,7 @@ function Profile() {
     await queryClient.cancelQueries();
     queryClient.clear();
     await supabase.auth.signOut();
-    navigate({ to: "/", replace: true });
+    navigate({ to: "/entrar", replace: true });
   }
 
   return (
