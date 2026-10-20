@@ -145,7 +145,7 @@ export function useHomeImageSrc(value: string | null | undefined) {
   if (!value) return { src: undefined, before: false };
   if (isDemo) {
     const [key, mod] = value.slice(5).split("~");
-    return { src: DEMO[key], before: mod === "before" };
+    return { src: DEMO[key ?? ""], before: mod === "before" };
   }
   return { src: data, before: false };
 }
