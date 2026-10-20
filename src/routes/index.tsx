@@ -1,7 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Star, Sparkles, Eye, Brush, Smile, Footprints, Package, MapPin, Clock, Instagram, MessageCircle, CalendarCheck, CheckCircle2 } from "lucide-react";
+import { Star, MapPin, Clock, Instagram, MessageCircle, CalendarCheck, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SalonLogoIcon } from "@/lib/logo-icons";
+import { DEFAULT_HOME, HomeImg, useHomeContent } from "@/lib/home-content";
+import { BeforeAfterSection, Carousel, GallerySection, LocationSection, PillarsSection, ServicesSection, Stats } from "@/components/HomeSections";
 
 const WHATSAPP = "https://wa.me/5513998071897";
 const MAPS = "https://www.google.com/maps/place/Studio+Naylza+Reis/@-24.1618135,-46.7540683,17z";
@@ -20,33 +22,10 @@ export const Route = createFileRoute("/")({
   component: Landing,
 });
 
-const stats = [
-  { n: "5,0★", l: "no Google" },
-  { n: "3 anos", l: "de experiência" },
-  { n: "+200", l: "clientes atendidas" },
-];
-
 const reviews = [
   { name: "Juliana M.", text: "Minhas unhas nunca duraram tanto! Atendimento caprichoso, ambiente lindo e a Naylza é um amor. Virei cliente fiel." },
   { name: "Patrícia S.", text: "Fiz cílios e sobrancelha e saí outra pessoa. Ficou natural, do jeitinho que eu pedi. Recomendo de olhos fechados." },
   { name: "Carla R.", text: "Peguei o pacote de pés e mãos e valeu cada centavo. Pontualidade, higiene impecável e muito carinho em cada detalhe." },
-];
-
-const services = [
-  { icon: Sparkles, t: "Unhas", d: "Esmaltação, alongamento e nail art com acabamento impecável e durabilidade de verdade." },
-  { icon: Eye, t: "Cílios", d: "Olhar marcante desde o acordar, com fios leves, confortáveis e efeito sob medida para você." },
-  { icon: Brush, t: "Sobrancelha", d: "Design que valoriza seu rosto e harmoniza a expressão, respeitando sua beleza natural." },
-  { icon: Smile, t: "Rosto", d: "Cuidados faciais que renovam a pele e devolvem o viço, para você se sentir radiante." },
-  { icon: Footprints, t: "Pés", d: "Pés macios, bem cuidados e prontos para qualquer sandália, com higiene total." },
-  { icon: Package, t: "Pacotes", d: "Combine seus serviços favoritos, economize e mantenha a rotina de beleza em dia." },
-];
-
-const pillars = [
-  { t: "Profissional qualificada", d: "Técnicas atualizadas e cursos constantes para entregar o melhor resultado." },
-  { t: "Atendimento personalizado", d: "Cada cliente é única: ouvimos você antes de começar qualquer procedimento." },
-  { t: "Produtos de qualidade", d: "Trabalhamos apenas com marcas reconhecidas, seguras e de alta performance." },
-  { t: "Higiene e segurança", d: "Materiais esterilizados e descartáveis, porque sua saúde vem primeiro." },
-  { t: "Ambiente acolhedor", d: "Um espaço tranquilo e aconchegante para você relaxar enquanto se cuida." },
 ];
 
 const steps = [
@@ -56,20 +35,9 @@ const steps = [
   { t: "Compareça", d: "É só chegar e aproveitar seu momento." },
 ];
 
-function Stats() {
-  return (
-    <div className="grid grid-cols-3 gap-4">
-      {stats.map((s) => (
-        <div key={s.l} className="text-center">
-          <div className="font-display text-3xl font-semibold text-primary">{s.n}</div>
-          <div className="text-xs text-muted-foreground">{s.l}</div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 function Landing() {
+  const { data } = useHomeContent();
+  const c = data ?? DEFAULT_HOME;
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="sticky top-0 z-30 border-b border-border/70 bg-background/85 backdrop-blur">
@@ -85,8 +53,14 @@ function Landing() {
       </header>
 
       {/* Hero */}
-      <section className="bg-soft">
-        <div className="mx-auto max-w-4xl px-4 py-20 text-center">
+      <section className="relative isolate overflow-hidden bg-soft">
+        {c.heroBg && (
+          <>
+            <HomeImg value={c.heroBg} alt="" eager className="absolute inset-0 -z-20 size-full" />
+            <div className="absolute inset-0 -z-10 bg-background/75" />
+          </>
+        )}
+        <div className="mx-auto max-w-4xl px-4 py-24 text-center">
           <p className="text-sm uppercase tracking-widest text-primary">Studio de beleza em Itanhaém</p>
           <h1 className="mt-4 font-display text-5xl leading-tight md:text-6xl">Sua beleza natural, realçada com carinho e técnica.</h1>
           <p className="mx-auto mt-5 max-w-2xl text-lg text-muted-foreground">
@@ -96,9 +70,11 @@ function Landing() {
             <Button asChild size="lg"><Link to="/entrar">Agendar horário agora</Link></Button>
             <Button asChild size="lg" variant="outline"><a href="#servicos">Ver serviços</a></Button>
           </div>
-          <div className="mx-auto mt-12 max-w-md"><Stats /></div>
+          <div className="mx-auto mt-12 max-w-md"><Stats c={c} /></div>
         </div>
       </section>
+
+      <Carousel images={c.carousel} />
 
       {/* Avaliações */}
       <section className="mx-auto max-w-6xl px-4 py-20">
@@ -115,36 +91,15 @@ function Landing() {
         </div>
       </section>
 
-      {/* Serviços */}
-      <section id="servicos" className="bg-soft">
-        <div className="mx-auto max-w-6xl px-4 py-20">
-          <h2 className="text-center font-display text-4xl">Nossos serviços</h2>
-          <p className="mx-auto mt-2 max-w-2xl text-center text-muted-foreground">Técnica apurada e atendimento pensado para o seu estilo, do primeiro detalhe ao acabamento.</p>
-          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {services.map((s) => (
-              <div key={s.t} className="surface-card flex flex-col p-6">
-                <s.icon className="size-7 text-primary" />
-                <h3 className="mt-3 font-display text-2xl">{s.t}</h3>
-                <p className="mt-2 flex-1 text-sm text-muted-foreground">{s.d}</p>
-                <Link to="/entrar" className="mt-4 text-sm font-semibold text-primary hover:underline">Agendar →</Link>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      <ServicesSection c={c} />
 
-      {/* Diferenciais */}
-      <section className="mx-auto max-w-5xl px-4 py-20">
-        <h2 className="text-center font-display text-4xl">Por que escolher o Studio Naylza Reis?</h2>
-        <ol className="mt-10 space-y-4">
-          {pillars.map((p, i) => (
-            <li key={p.t} className="surface-card flex gap-4 p-5">
-              <span className="font-display text-3xl font-semibold text-primary">{String(i + 1).padStart(2, "0")}</span>
-              <div><h3 className="font-semibold">{p.t}</h3><p className="text-sm text-muted-foreground">{p.d}</p></div>
-            </li>
-          ))}
-        </ol>
-      </section>
+      <PillarsSection c={c} />
+
+      <GallerySection c={c} />
+
+      <BeforeAfterSection c={c} />
+
+      <LocationSection c={c} whatsapp={WHATSAPP} />
 
       {/* CTA */}
       <section className="bg-hero text-primary-foreground">
@@ -176,7 +131,7 @@ function Landing() {
           <p className="mt-4 text-muted-foreground">
             O Studio Naylza Reis nasceu da paixão por cuidar de pessoas. Há 3 anos em Itanhaém, unimos técnica, produtos de qualidade e um atendimento acolhedor para que cada cliente saia confiante e feliz com o resultado. Aqui, beleza é feita com dedicação, segurança e muito carinho.
           </p>
-          <div className="mx-auto mt-10 max-w-md"><Stats /></div>
+          <div className="mx-auto mt-10 max-w-md"><Stats c={c} /></div>
         </div>
       </section>
 
@@ -185,12 +140,12 @@ function Landing() {
         <div className="mx-auto grid max-w-6xl gap-8 px-4 py-12 md:grid-cols-3">
           <div>
             <h3 className="flex items-center gap-2 font-semibold"><MapPin className="size-4 text-primary" />Endereço</h3>
-            <p className="mt-2 text-sm text-muted-foreground">Itanhaém – SP</p>
+            <p className="mt-2 text-sm text-muted-foreground">{c.address}</p>
             <a href={MAPS} target="_blank" rel="noreferrer" className="text-sm text-primary hover:underline">Ver no Google Maps</a>
           </div>
           <div>
             <h3 className="flex items-center gap-2 font-semibold"><Clock className="size-4 text-primary" />Horário</h3>
-            <p className="mt-2 text-sm text-muted-foreground">Segunda a sábado, 9h às 19h</p>
+            <p className="mt-2 text-sm text-muted-foreground">{c.hours}</p>
           </div>
           <div>
             <h3 className="flex items-center gap-2 font-semibold"><CalendarCheck className="size-4 text-primary" />Contato</h3>
