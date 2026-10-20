@@ -162,6 +162,13 @@
       "when": 1792106550896,
       "tag": "0022_create_promotions",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1792507437838,
+      "tag": "0023_home_content",
+      "breakpoints": true
     }
   ]
 }
